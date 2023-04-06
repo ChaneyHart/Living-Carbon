@@ -17,12 +17,14 @@ library(multcomp)
 # Negative growth and missing data was imputted for diameter and height. No outliers were removed
 # CT1 was excluded as were trees that were damaged and replaced or died.
 
-growth <- read.csv("LC_3_22_growth_data_cleaned.csv")
+#read in data
+growth <- read.csv("2022_growth&inventory_analylsis/growth_data_cleaning/LC_3_22_growth_data_cleaned.csv")
+#check data types
 str(growth)
 growth$D385 <- as.numeric(growth$D385)
 
 
-
+#Convert dataframe to long format to look at changes over time for each tree
 Height_long <- pivot_longer(growth, cols = c(H49,H144,H299,H335,H357,H385,H421,H497), names_to = "Days", values_to = "Height")
 Height_long <- Height_long %>% mutate(Days = as.numeric(substr(Height_long$Days,2,4)))
 
