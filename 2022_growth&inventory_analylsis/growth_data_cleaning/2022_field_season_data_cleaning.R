@@ -5,6 +5,11 @@
 firstyr_dat <- read.csv(file = "3_22_DBH_H_excluded.csv")
 
 
+#Check to see that trees that are supposed to be excluded are not present
+
+exluded_trees <- read.csv(file = "2022_growth&inventory_analylsis/growth_raw_collection/2022_compiled_growth&inventory/LC_all trees to exclude.xlsx")
+
+
 firstyr_dat_ht <- firstyr_dat[,c(1,2,3,4,5,6,7,8,9,11,15,19,23,27,31,38)]
 firstyr_dat_diam <- firstyr_dat[,c(1,2,3,4,5,6,7,8,10,12,16,20,24,28,32,37)]
 
