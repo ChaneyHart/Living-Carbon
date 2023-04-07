@@ -203,7 +203,7 @@ plot(fitted(mod2), residuals(mod2), xlab="Fitted Values",
 qqnorm(residuals(mod2)); qqline(residuals(mod2))
 
 
-# Effect of Construct
+# Effect of Construct (controls not pooled)
 ht_mod3 <- lme(H497 ~ H49 + construct, random = ~1|block, data = growth)
 summary(ht_mod3)
 
@@ -228,7 +228,7 @@ plot(fitted(d_mod3), residuals(d_mod3), xlab="Fitted Values",
 qqnorm(residuals(d_mod3)); qqline(residuals(d_mod3))
 
 
-# Effect of Construct
+# Effect of event (escapes pooled)
 ht_mod4 <- lme(H497 ~ H49 + event2, random = ~1|block, data = growth)
 summary(ht_mod4)
 
@@ -250,3 +250,39 @@ plot(fitted(d_mod4), residuals(d_mod4), xlab="Fitted Values",
 qqnorm(residuals(d_mod4)); qqline(residuals(d_mod4))
 
 emmeans(d_mod4, specs = pairwise ~event2)
+
+
+##Compare volume proxies
+#VI = h*diam^2
+
+growth$V49 = (growth$D49^2)*growth$H49
+growth$V144 = (growth$D49^2)*growth$H144
+growth$V299 = (growth$D49^2)*growth$H299
+growth$V335 = (growth$D49^2)*growth$H335
+growth$V357 = (growth$D49^2)*growth$H357
+growth$V385 = (growth$D49^2)*growth$H385
+growth$V421 = (growth$D49^2)*growth$H421
+growth$V497 = (growth$D49^2)*growth$H497
+
+
+
+# Fit model to test a difference between transgenic and control (construct2)
+# Check block effect
+# Volume
+mod000 <- lm(V497 ~ V49 + construct2 + block, data = growth)
+summary(mod000)
+#Block is significant, but not by much.
+
+# Make a block as a random effect
+mod3 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
+summary(mod3)
+
+# Residual and qq plots
+plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+
+#bit of a funnel shape
+#Are assumptions met?
+
+qqnorm(residuals(mod3)); qqline(residuals(mod3))
