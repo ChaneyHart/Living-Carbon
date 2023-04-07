@@ -264,7 +264,7 @@ growth$V385 = (growth$D49^2)*growth$H385
 growth$V421 = (growth$D49^2)*growth$H421
 growth$V497 = (growth$D49^2)*growth$H497
 
-
+write.csv(growth,file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 
 # Fit model to test a difference between transgenic and control (construct2)
 # Check block effect

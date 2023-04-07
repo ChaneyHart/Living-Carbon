@@ -1,4 +1,4 @@
-#More thorough background analysis of comp between gene expression and physiology
+#Analysis of gene expression data relationship with phenotype.
 
 library(ggplot2)
 library(dplyr)
@@ -9,7 +9,7 @@ library(PCAtools)
 library(GGally)
 
 #read in compiled csv
-by_tree <- read.csv("Gene_exp_bytree_both_yrs.csv")
+by_tree <- read.csv("2022_molecular_analysis/2022_gene_expression/Gene_exp_bytree_both_yrs.csv")
 str(by_tree)
 by_tree$PLGG1_2021 <- as.numeric(by_tree$PLGG1_2021)
 by_tree$GDH_2021 <- as.numeric(by_tree$GDH_2021)
@@ -64,7 +64,7 @@ PCA_opt1_plot2 <- ggbiplot(PCA_opt1, obs.scale = 1, var.scale = 1, labels.size =
   scale_color_discrete(labels=c('A','B','C','D','E','F','G','H'))
 
 PCA_opt1_plot2
-ggsave(filename = "PCA_opt1_plot2.png",plot = PCA_opt1_plot2, dpi=300)
+ggsave(filename = "2022_molecular_analysis/2022_gene_expression/gene_exp_clusters.png",plot = PCA_opt1_plot2, dpi=300)
 
 ##interpret PCA
 
@@ -119,8 +119,8 @@ phys <- read.csv("../LC_June2022/Li6800_data/Aci_parameters_list.csv")
 phys$ID <- phys$tree
 physII <- read.csv("../LC_June2022/Li6800_data/Aci_parameters_list_flr.csv")
 physII$ID <- physII$tree
-growth <- read.csv("../LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
-growth$VI <- growth$V419/1000
+growth <- read.csv("2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
+growth$VI <- growth$V497/1000
 
 phys <- left_join(phys, growth, by = "ID")
 physII <- left_join(physII, growth, by = "ID")
