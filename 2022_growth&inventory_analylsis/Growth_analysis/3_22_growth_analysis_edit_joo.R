@@ -27,20 +27,21 @@ growth$D385 <- as.numeric(growth$D385)
 #Convert dataframe to long format to look at changes over time for each tree
 Height_long <- pivot_longer(growth, cols = c(H49,H144,H299,H335,H357,H385,H421,H497), names_to = "Days", values_to = "Height")
 Height_long <- Height_long %>% mutate(Days = as.numeric(substr(Height_long$Days,2,4)))
+Height_long$meters <- Height_long$Height/1000
 
 Diam_long <- pivot_longer(growth, cols = c(D49,D144,D299,D335,D357,D385,D421,D497), names_to = "Days", values_to = "Diameter")
 Diam_long <- Diam_long %>% mutate(Days = as.numeric(substr(Diam_long$Days,2,4)))
 
 Height_event <- group_by(Height_long, event_short)
 
-ht_full <- ggplot(Height_long, aes(x = Days, y = Height))+
+ht_full <- ggplot(Height_long, aes(x = Days, y = meters))+
   geom_point(aes(color = ID), show.legend = FALSE)+
-  xlab("days since planting")+
-  ylab("Height (mm)")
+  xlab("Days since planting")+
+  ylab("Height (m)")
 
 
 ht_full
-ggsave("ht_full.png", plot = ht_full, width = 6, height = 3, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline.png", plot = ht_full, width = 6, height = 3, units = "in", dpi = 300)
 
 d_full <- ggplot(Diam_long, aes(x = Days, y = Diameter))+
   geom_point(aes(color = ID), show.legend = FALSE)+
@@ -49,24 +50,30 @@ d_full <- ggplot(Diam_long, aes(x = Days, y = Diameter))+
 
 
 d_full
-ggsave("d_full.png", plot = d_full, width = 6, height = 3, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/d_full.png", plot = d_full, width = 6, height = 3, units = "in", dpi = 300)
 
 
 ###statistical analysis##############
-
+###First go at it by Chaney####
+###simple models#####
 ######Growth analysis##########
 
-###Height and DBH in September####
+###Height and DBH at end of season####
 
+
+
+
+#convert to meters
+growth$H497m <- growth$H497/1000
 
 #plot
-growth2022_ht_comp <- ggplot(growth, aes(x = reorder(event_short,H497), y = H497, fill = construct))+
+growth2022_ht_comp <- ggplot(growth, aes(x = reorder(event_short,H497m), y = H497m, fill = construct))+
   geom_boxplot()+
   xlab("Event")+
-  ylab("2022 growing season height(mm)")
+  ylab("2022 growing season height(m)")
 
 #block effect?
-growth2022_ht_comp2 <- ggplot(growth, aes(x = reorder(construct,H497), y = H497, fill = block))+
+growth2022_ht_comp2 <- ggplot(growth, aes(x = reorder(construct,H497), y = H497m, fill = block))+
   geom_boxplot()+
   xlab("Event")+
   ylab("2022 growing season height(mm)")
@@ -80,7 +87,7 @@ aov_2022_ht <- aov(H497 ~ event + block, data = growth)
 plot(aov_2022_ht,which = 1)
 #Identified LCOR-445 as not measured in Sep. Due to beehive?
 
-ggsave("2022_growing_season_ht_comp.png",plot = growth2022_ht_comp, width = 8, height = 5, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/2022_growing_season_ht_comp.png",plot = growth2022_ht_comp, width = 8, height = 5, units = "in", dpi = 300)
 ggsave("2022_growing_season_ht_comp_blockeff.png",plot = growth2022_ht_comp2, width = 8, height = 5, units = "in", dpi = 300)
 
 ##stats######
@@ -114,7 +121,7 @@ summary(growth2022_glht)
 growth2022_diam_comp <- ggplot(growth, aes(x = reorder(event_short,D497), y = D497, fill = construct))+
   geom_boxplot()+
   xlab("Event")+
-  ylab("Sep diameter(mm)")
+  ylab("2022 growing season diameter(mm)")
 
 growth2022_diam_comp2 <- ggplot(growth, aes(x = reorder(construct,D497), y = D497, fill = block))+
   geom_boxplot()+
@@ -133,7 +140,7 @@ plot(aov_growth2022_diam,which = 1)
 
 growth2022_diam_comp
 
-ggsave("Growth2022_diam_comp.png",plot = growth2022_diam_comp, width = 8, height = 5, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/Growth2022_diam_comp.png",plot = growth2022_diam_comp, width = 8, height = 5, units = "in", dpi = 300)
 ggsave("Growth2022_diam_comp_blockeff.png",plot = growth2022_diam_comp2, width = 8, height = 5, units = "in", dpi = 300)
 
 ####stats#####
