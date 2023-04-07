@@ -17,7 +17,7 @@ library(mgcv)
 #set working directory
 
 #read in data
-LC_spreadz = '2022_physiology_analysis/CO2_response/compiled/Aci_by_tree.xlsx' 
+LC_spreadz = '2022_physiology_analysis/CO2_response/compiled/ACI_individual_tree.xlsx' 
 
 
 #Function for cleaning up data for fits
@@ -35,84 +35,24 @@ plotfits = function(fit){
 }
 
 #creating data frame to store data
-#also importing growth and environmental data
 
-all_trees_df <- read.csv("2022_physiology_analysis/CO2_response/compiled/ACI_compilation_III.csv")
-all_trees_df$ID <- all_trees_df$tree
-growth_0912 <- read.csv("../../LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
-
-all_trees_df_subset <- subset(all_trees_df, select = c(obs,date,hhmmss,instrument,row,column,spad,operator,temp,event,event_short,block,leaf,tree,ID,E,Emm,A,Csetpoint,Ca,Ci,gsw,gbw,gtw,TleafEB,RHcham,VPcham,VPDleaf,PhiPS2,ETR,PhiCO2,Qin,Tleaf,Fm.,PhiPS2_PhiCO2))
-all_trees_df_subset <- left_join(all_trees_df_subset, growth_0912, by = "ID")
-all_trees_df_subset <- subset(all_trees_df_subset, Ci > 0)
-
+#create separate dataframe for observations with fluoresence data 
 #subset data for which fluorescence was on  
-all_trees_df_flr <- subset(all_trees_df_subset, Fm. > 100)
+all_trees_df_flr <- subset(all_trees_df, Fm. > 100)
 
-#Look at data before fitting models
-
-#A-Ci w/ points
-ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = event_short.x))+
-  geom_point()+
-  xlab("Ci (ppm)")+
-  ylab("A (µmol/m^s*s")
-
-#W/ lines
-ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = event_short.x))+
-  geom_smooth(span =0.7)+
-  xlab("Ci (ppm)")+
-  ylab("A (µmol/m^s*s)")
-
-
-# same thing, but by construct
-ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = construct2))+
-  geom_point()+
-  xlab("Ci (ppm)")+
-  ylab("A (µmol/m^s*s")
-
-ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = construct2))+
-  geom_smooth(span= 0.5)+
-  xlab("Ci (ppm)")+
-  ylab("A (µmol/m^s*s")
-
-
-#PhiCO2 to PhiPS2
-#considerations for this. Only consider when assimilation is positive.
-# remove outliers due to dividing by a very small PhiCO2 number
-
-all_trees_df_flr_II <- subset(all_trees_df_flr, A > 0)
-str(all_trees_df_flr)
-
-
-all_trees_df_flr_II$PhiPS2 <- as.numeric(all_trees_df_flr_II$PhiPS2)
-ggplot(all_trees_df_flr_II, aes(x=PhiCO2, y=PhiPS2, color=event_short.x))+
-  geom_point()
-
-all_trees_df_flr_II$PhiPS2_CO2 <- all_trees_df_flr_II$PhiPS2/all_trees_df_flr_II$PhiCO2
-
-#ggplot(all_trees_df_flr_II, aes(x = Ci, y = PhiPS2_CO2, color = construct2))+
-  geom_point()+
-  geom_smooth()
-
-PhiCO2_model <- lm(PhiPS2 ~ PhiCO2 + construct2, all_trees_df_flr)
-summary(PhiCO2_model)
-
-##
-
-
-
+#convert to wide format
 all_trees_wide <- pivot_wider(all_trees_df,id_cols = "tree", names_from = Csetpoint, values_from = c(A,gsw,Ci))
-all_trees_flr_wide <- pivot_wider(all_trees_df_flr,id_cols = "tree", names_from = Csetpoint, values_from = c(A,gsw,Ci,PhiPS2,ETR,PhiCO2, PhiPS2_PhiCO2))
+all_trees_flr_wide <- pivot_wider(all_trees_df_flr,id_cols = "tree", names_from = Csetpoint, values_from = c(A,gsw,Ci,PhiPS2,ETR,PhiCO2))
 
-#write.csv(all_trees_wide, file = "Aci_parameters_list.csv")
-#write.csv(all_trees_flr_wide, file = "Aci_parameters_list_flr.csv")
 
-##look at fits, model and graph them and get outputs and assign to storage dataframe
 
 tree_list = list()
 Vcmax_list = list()
 Jmax_list = list()
 Rd_list = list()
 
+
+##look at fits, model and graph them and get outputs and assign to storage dataframe
 
 LCOR578 = read.xlsx(LC_spreadz,'LCOR-578')
 viewdat(LCOR578)
@@ -1043,81 +983,6 @@ aci_parameters_list <- inner_join(efficiency_pars_II, all_trees_wide, by = "tree
 aci_parameters_list_flr <- inner_join(efficiency_pars_II, all_trees_flr_wide, by = "tree")
 
 
-write.csv(aci_parameters_list, file = "Aci_parameters_list.csv")
-write.csv(aci_parameters_list_flr, file = "Aci_parameters_list_flr.csv")
-
-#read in data file
-data_7_7 <- read.csv("LC_June2022/Li6800_data/6800_R/07_07_2022_CH_Aci_Carlos.csv")
-data_7_8 <- read.csv("LC_June2022/Li6800_data/6800_R/07_08_2022_CH_Aci_Carlos.csv")
-data_7_11 <- read.csv("LC_June2022/Li6800_data/6800_R/07_11_2022_CH_Aci_Carlos.csv")
-data_7_12 <- read.csv("LC_June2022/Li6800_data/6800_R/07_12_2022_CH_Aci_Carlos_useTleafEB.csv")
-data_7_13 <- read.csv("LC_June2022/Li6800_data/6800_R/07_13_2022_CH_Aci_Carlos_useTleafEB.csv")
-data_7_18 <- read.csv("LC_June2022/Li6800_data/6800_R/07_18_2022_CH_Aci_Carlos.csv")
-data_7_19 <- read.csv("LC_June2022/Li6800_data/6800_R/07_19_2022_CH_Aci_Carlos.csv")
-data_7_20 <- read.csv("LC_June2022/Li6800_data/6800_R/07_20_2022_CH_Aci_Carlos.csv")
-data_7_22 <- read.csv("LC_June2022/Li6800_data/6800_R/07_22_2022_CH_Aci_Carlos.csv")
-data_7_25 <- read.csv("LC_June2022/Li6800_data/6800_R/07_25_2022_CH_Aci_Carlos.csv")
-data_7_25_2 <- read.csv("LC_June2022/Li6800_data/6800_R/07_25_2022_CH_Aci_Gandalf.csv")
-data_7_26 <- read.csv("LC_June2022/Li6800_data/6800_R/07_26_2022_CH_Aci_Carlos.csv")
-data_7_26_2 <- read.csv("LC_June2022/Li6800_data/6800_R/07_26_2022_CH_Aci_Gandalf.csv")
-data_7_27 <- read.csv("LC_June2022/Li6800_data/6800_R/07_27_2022_CH_Aci_Carlos.csv")
-data_7_27_2 <- read.csv("LC_June2022/Li6800_data/6800_R/07_27_2022_CH_Aci_Gandalf.csv")
-data_7_28 <- read.csv("LC_June2022/Li6800_data/6800_R/07_28_2022_CH_Aci_Carlos.csv")
-data_7_28_2 <- read.csv("LC_June2022/Li6800_data/6800_R/07_28_2022_CH_Aci_Gandalf.csv")
-
-#Function for filtering out useful data
-
-#Function for cleaning up data for fits
-viewdat = function(dat){plot(y = dat$A, x = dat$Ci);abline(h = seq(0,20,1));dat}
-
-viewdat(data_7_7)
-#good
-viewdat(data_7_8)
-#good
-viewdat(data_7_11)
-#nb
-viewdat(data_7_12)
-#good
-viewdat(data_7_18)
-#sorta unexpected dip around 1200
-viewdat(data_7_19)
-#bit wobbly around 500
-viewdat(data_7_20)
-
-
-
-
-
-
-
-
-#combine similar data frames
-data_gandalf <- bind_rows(data_7_25_2, data_7_26_2, data_7_27_2, data_7_28_2)
-data_7_11_carlos <- bind_rows(data_7_7,data_7_8, data_7_11)
-data_18_27_carlos <- bind_rows(data_7_18, data_7_19, data_7_20, data_7_22, data_7_25, data_7_26, data_7_27)
-data_tleafeb <- bind_rows(data_7_12, data_7_13)
-#running into error because started using fluorometer on 7_18 and after
-sapply(data_7_18,mode)
-
-
-data_7_7$Rd <- 1.13
-
-f_7_7 <- fitacis(data_7_7, "tree", fitmethod = "default", id = "tree",Tcorrect = "FALSE",varnames = list(ALEAF = "A", Tleaf = "Tleaf", PPFD = "Qin", Ci = "Ci", Rd = "Rd"))
-with(coef(f_7_7), plot(Vcmax, Jmax))
-
-summary(f_7_7$`LCOR-152`)
-#Tleaf off here
-summary(f_7_7$`LCOR-211`)
-plot(f_7_7$`LCOR-211`)
-summary(f_7_7$`LCOR-269`)
-plot(f_7_7$`LCOR-269`)
-summary(f_7_7$`LCOR-578`)
-plot(f_7_7$`LCOR-578`)
-
-with(coef(f_7_7), plot(Vcmax, Jmax))
-
-f_152 <- fitacis(data_7_7, "tree", id = "tree", Tcorrect = "FALSE", varnames = list(ALEAF = "A",Ci = "Ci", PPFD = "Qin", Tleaf = "TleafEB", Rd = "Rd",VPD = "VPDleaf"))
-summary(f_152$`LCOR-152`)
-plot(f_152$`LCOR-152`)
-
+write.csv(aci_parameters_list, file = "2022_physiology_analysis/CO2_response/CO2_response_modeling/Aci_parameters_list.csv")
+write.csv(aci_parameters_list_flr, file = "2022_physiology_analysis/CO2_response/CO2_response_modeling/Aci_parameters_list_flr.csv")
 
