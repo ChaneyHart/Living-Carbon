@@ -283,6 +283,7 @@ plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
      main="Fitted vs. Residuals"); abline(h=0)
 
 #bit of a funnel shape
+#Makes sense with multipliative change of diameter. Large diameter trees get disproportionately larger modeled volume.
 #Are assumptions met?
 
 qqnorm(residuals(mod3)); qqline(residuals(mod3))
