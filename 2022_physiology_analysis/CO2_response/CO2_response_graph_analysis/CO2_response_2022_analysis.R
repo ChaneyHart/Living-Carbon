@@ -7,7 +7,7 @@ library(tidyr)
 library(purrr)
 library(multcomp)
 
-setwd("~/Google Drive/G_Living Carbon")
+
 
 growth_0912 <- read.csv("LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
 Aci_parameters <- read.csv("LC_June2022/Li6800_data/Aci_parameters_list.csv")

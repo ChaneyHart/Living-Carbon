@@ -17,7 +17,7 @@ library(mgcv)
 #set working directory
 
 #read in data
-LC_spreadz = '2022_physiology_analysis/CO2_response/compiled/ACI_individual_tree.xlsx' 
+`LC_spreadz = '2022_physiology_analysis/CO2_response/compiled/ACI_individual_tree.xlsx' 
 
 
 #Function for cleaning up data for fits
@@ -36,16 +36,26 @@ plotfits = function(fit){
 
 #creating data frame to store data
 
-#create separate dataframe for observations with fluoresence data 
+all_trees_df <- read.csv("2022_physiology_analysis/CO2_response/compiled/ACI_compilation_w_weather.csv")
+all_trees_df$ID <- all_trees_df$tree
+
+#create separate dataframe for observations with fluorescence data 
 #subset data for which fluorescence was on  
 all_trees_df_flr <- subset(all_trees_df, Fm. > 100)
 
+
+
 #convert to wide format
-all_trees_wide <- pivot_wider(all_trees_df,id_cols = "tree", names_from = Csetpoint, values_from = c(A,gsw,Ci))
+all_trees_wide <- pivot_wider(all_trees_df,id_cols = c("tree"), names_from = Csetpoint, values_from = c(A,gsw,Ci))
 all_trees_flr_wide <- pivot_wider(all_trees_df_flr,id_cols = "tree", names_from = Csetpoint, values_from = c(A,gsw,Ci,PhiPS2,ETR,PhiCO2))
 
+#edit wide dataframe so that average air temp,VPD and spad are calculated for each tree
 
+tree_meta_df <- aggregate(cbind(Air_temp,Air_VPD,spad) ~ tree, data = all_trees_df, FUN = mean)
+all_trees_wide <- inner_join(all_trees_wide, tree_meta_df)
+all_trees_flr_wide <- inner_join(all_trees_flr_wide, tree_meta_df)
 
+#lists to store parameters
 tree_list = list()
 Vcmax_list = list()
 Jmax_list = list()
