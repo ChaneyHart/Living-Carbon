@@ -87,7 +87,12 @@ vol_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_full, width = 6, height = 3, units = "in", dpi = 300)
 
 #Summary statistics
-
+#2021 height growth
+(mean(growth$H144) - mean(growth$H49))/mean(growth$H49)
+#2021 diameter growth
+(mean(growth$D144) - mean(growth$D49))/mean(growth$D49)
+#2021 volume growth
+(mean(growth$V144) - mean(growth$V49))/mean(growth$V49)
 
 
 ###statistical analysis##############
