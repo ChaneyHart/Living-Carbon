@@ -54,7 +54,7 @@ Diam_long <- Diam_long %>% mutate(Days = as.numeric(substr(Diam_long$Days,2,4)))
 
 Volume_long <- pivot_longer(growth, cols = c(V49,V144,V299,V335,V357,V385,V421,V497), names_to = "Days", values_to = "Volume")
 Volume_long <- Volume_long %>% mutate(Days = as.numeric(substr(Volume_long$Days,2,4)))
-
+Volume_long$cm3 <- Volume_long$Volume/1000
 
 
 ht_full <- ggplot(Height_long, aes(x = Days, y = meters))+
@@ -76,15 +76,18 @@ d_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/d_full.png", plot = d_full, width = 6, height = 3, units = "in", dpi = 300)
 
 
-vol_full <- ggplot(Volume_long, aes(x = Days, y = log(Volume)))+
+vol_full <- ggplot(Volume_long, aes(x = Days, y = (cm3)))+
   geom_point(aes(color = ID), show.legend = FALSE)+
   xlab("days since planting")+
-  ylab("Volume log(cubic mm)")
+  ylab("Volume (cubic cm)")
 
 
 
 vol_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_full, width = 6, height = 3, units = "in", dpi = 300)
+
+#Summary statistics
+
 
 
 ###statistical analysis##############
@@ -191,6 +194,14 @@ TukeyHSD(aov_growth2022_diam)
 growth2022_diam_Dunnets_aov <- aov(D497 ~ construct + block, data = growth_Dunnetts)
 Sep_diam_glht <- glht(growth2022_diam_Dunnets_aov,linfct = mcp(construct = "Dunnett"))
 summary(Sep_diam_glht)
+
+#######
+growth2022_vol_comp <- ggplot(growth, aes(x = reorder(event_short,V497_cm), y = V497_cm, fill = construct))+
+  geom_boxplot()+
+  xlab("Event")+
+  ylab("2022 growing season volume (cubic cm)")
+
+ggsave('2022_growth&inventory_analylsis/growth_graph/growth2022_vol_comp.png', plot = growth2022_vol_comp,width = 8, height = 5, units = "in", dpi = 300) 
 
 ###############################################################
 # Edit by Sukhyun Joo ############
