@@ -9,8 +9,46 @@ library(multcomp)
 
 
 
-growth_0912 <- read.csv("LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
-Aci_parameters <- read.csv("LC_June2022/Li6800_data/Aci_parameters_list.csv")
+growth_0912 <- read.csv("2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
+Aci_parameters <- read.csv("2022_physiology_analysis/CO2_response/CO2_response_modeling/Aci_parameters_list.csv")
+
+aci_obs_df <- read.csv("2022_physiology_analysis/CO2_response/compiled/ACI_compilation_w_weather.csv")
+aci_obs_df$ID <- aci_obs_df$tree
+
+#combine data sets
+Aci_growth <- inner_join(Aci_parameters, growth_0912, by = "ID")
+
+
+aci_obs_subset <- subset(aci_obs_df, select = c(ID,obs,date,hhmmss,instrument,row,column,spad,operator,temp,event,event_short,block,leaf,tree,E,Emm,A,Csetpoint,Ca,Ci,gsw,gbw,gtw,TleafEB,RHcham,VPcham,VPDleaf,PhiPS2,ETR,PhiCO2,Qin,Tleaf))
+aci_obs_subset <- left_join(acid_obs_subset, growth_0912, by = "ID")
+aci_obs_subset_flr <- subset(aci_obs_subset, PhiPS2 > 0)
+
+###summary graphs
+
+all_trees_df_subset <- subset(all_trees_df_subset, Ci > 0)
+
+ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = event_short.x))+
+  geom_point()+
+  xlab("Ci (ppm)")+
+  ylab("A (µmol/m^s*s")
+
+ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = event_short.x))+
+  geom_smooth(span =0.7)+
+  xlab("Ci (ppm)")+
+  ylab("A (µmol/m^s*s)")
+
+
+
+ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = construct2))+
+  geom_point()+
+  xlab("Ci (ppm)")+
+  ylab("A (µmol/m^s*s")
+
+ggplot(all_trees_df_subset, aes(x=Ci, y=A, color = construct2))+
+  geom_smooth(span= 0.5)+
+  xlab("Ci (ppm)")+
+  ylab("A (µmol/m^s*s")
+
 
 Aci_growth <- inner_join(Aci_parameters, growth_0912, by = "ID")
 

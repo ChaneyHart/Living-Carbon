@@ -23,6 +23,26 @@ growth <- read.csv("2022_growth&inventory_analylsis/growth_data_cleaning/LC_3_22
 str(growth)
 growth$D385 <- as.numeric(growth$D385)
 
+#calculate volume
+
+growth$V49 = ((growth$D49^2)*growth$H49)
+growth$V144 = ((growth$D144^2)*growth$H144)
+growth$V299 = ((growth$D299^2)*growth$H299)
+growth$V335 = ((growth$D335^2)*growth$H335)
+growth$V357 = ((growth$D357^2)*growth$H357)
+growth$V385 = ((growth$D385^2)*growth$H385)
+growth$V421 = ((growth$D421^2)*growth$H421)
+growth$V497 = ((growth$D497^2)*growth$H497)
+
+growth$V49_cm = ((growth$D49^2)*growth$H49)/1000
+growth$V144_cm = ((growth$D144^2)*growth$H144)/1000
+growth$V299_cm = ((growth$D299^2)*growth$H299)/1000
+growth$V335_cm = ((growth$D335^2)*growth$H335)/1000
+growth$V357_cm = ((growth$D357^2)*growth$H357)/1000
+growth$V385_cm = ((growth$D385^2)*growth$H385)/1000
+growth$V421_cm = ((growth$D421^2)*growth$H421)/1000
+growth$V497_cm = ((growth$D497^2)*growth$H497)/1000
+
 
 #Convert dataframe to long format to look at changes over time for each tree
 Height_long <- pivot_longer(growth, cols = c(H49,H144,H299,H335,H357,H385,H421,H497), names_to = "Days", values_to = "Height")
@@ -32,7 +52,10 @@ Height_long$meters <- Height_long$Height/1000
 Diam_long <- pivot_longer(growth, cols = c(D49,D144,D299,D335,D357,D385,D421,D497), names_to = "Days", values_to = "Diameter")
 Diam_long <- Diam_long %>% mutate(Days = as.numeric(substr(Diam_long$Days,2,4)))
 
-Height_event <- group_by(Height_long, event_short)
+Volume_long <- pivot_longer(growth, cols = c(V49,V144,V299,V335,V357,V385,V421,V497), names_to = "Days", values_to = "Volume")
+Volume_long <- Volume_long %>% mutate(Days = as.numeric(substr(Volume_long$Days,2,4)))
+
+
 
 ht_full <- ggplot(Height_long, aes(x = Days, y = meters))+
   geom_point(aes(color = ID), show.legend = FALSE)+
@@ -51,6 +74,17 @@ d_full <- ggplot(Diam_long, aes(x = Days, y = Diameter))+
 
 d_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/d_full.png", plot = d_full, width = 6, height = 3, units = "in", dpi = 300)
+
+
+vol_full <- ggplot(Volume_long, aes(x = Days, y = log(Volume)))+
+  geom_point(aes(color = ID), show.legend = FALSE)+
+  xlab("days since planting")+
+  ylab("Volume log(cubic mm)")
+
+
+
+vol_full
+ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_full, width = 6, height = 3, units = "in", dpi = 300)
 
 
 ###statistical analysis##############
@@ -164,6 +198,7 @@ summary(Sep_diam_glht)
 # Additional libraries
 library(emmeans)
 library(nlme)
+library(lme4)
 
 unique(growth$event)
 
@@ -202,6 +237,22 @@ plot(fitted(mod2), residuals(mod2), xlab="Fitted Values",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(mod2)); qqline(residuals(mod2))
 
+#Volume
+
+mod000 <- lm(log(V497) ~ log(V49) + construct2 + block, data = growth)
+summary(mod000)
+#Block is significant
+
+# Make a block as a random effect
+mod3 <- lme(log(V497) ~ log(V49) + construct2, random = ~1|block, data = growth)
+summary(mod3)
+
+# Residual and qq plots
+plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(mod3)); qqline(residuals(mod3))
+#
 
 # Effect of Construct (controls not pooled)
 ht_mod3 <- lme(H497 ~ H49 + construct, random = ~1|block, data = growth)
@@ -228,6 +279,18 @@ plot(fitted(d_mod3), residuals(d_mod3), xlab="Fitted Values",
 qqnorm(residuals(d_mod3)); qqline(residuals(d_mod3))
 
 
+v_mod3 <- lme((V497) ~ (V49) + construct, random = ~1|block, data = growth)
+summary(v_mod3)
+
+emmeans(v_mod3, specs = pairwise ~construct)
+#exp(0.1082)
+#exp(0.0820)
+#exp(0.0692)
+#exp(0.0622)
+#exp(0.0390)
+#exp(0.0970)
+
+
 # Effect of event (escapes pooled)
 ht_mod4 <- lme(H497 ~ H49 + event2, random = ~1|block, data = growth)
 summary(ht_mod4)
@@ -251,39 +314,52 @@ qqnorm(residuals(d_mod4)); qqline(residuals(d_mod4))
 
 emmeans(d_mod4, specs = pairwise ~event2)
 
+v_mod4 <- lme(log(V497) ~ log(V49) + event2, random = ~1|block, data=growth)
+summary(v_mod4)
 
-##Compare volume proxies
-#VI = h*diam^2
+plot(fitted(v_mod4), residuals(v_mod4), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(v_mod4)); qqline(residuals(v_mod4))
+#definitely don't look as good as height and diameter.
+#Q-Q plot shows there is a prominent right tail.
 
-growth$V49 = (growth$D49^2)*growth$H49
-growth$V144 = (growth$D49^2)*growth$H144
-growth$V299 = (growth$D49^2)*growth$H299
-growth$V335 = (growth$D49^2)*growth$H335
-growth$V357 = (growth$D49^2)*growth$H357
-growth$V385 = (growth$D49^2)*growth$H385
-growth$V421 = (growth$D49^2)*growth$H421
-growth$V497 = (growth$D49^2)*growth$H497
+emmeans(v_mod4, specs = pairwise ~event2)
+
+#5A -CT3
+exp(0.26264)
+exp(0.1088)
+#5A - escape
+exp(0.22411)
+exp(0.0951)
+#5A - 13-15B
+exp(0.32854)
+exp(0.1249)
+#5A - 13-15E
+exp(0.28425)
+exp(0.1099)
+#5A - 2H
+exp(0.33052)
+exp(0.1107)
+#
 
 write.csv(growth,file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 
 # Fit model to test a difference between transgenic and control (construct2)
 # Check block effect
 # Volume
-mod000 <- lm(V497 ~ V49 + construct2 + block, data = growth)
+mod000 <- lm(log(V497) ~ log(V49) + construct2 + block, data = growth)
 summary(mod000)
-#Block is significant, but not by much.
+#Block is significant
 
 # Make a block as a random effect
-mod3 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
-summary(mod3)
+v_mod3 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
+summary(v_mod3)
 
 # Residual and qq plots
 plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
-
-#bit of a funnel shape
-#Makes sense with multipliative change of diameter. Large diameter trees get disproportionately larger modeled volume.
-#Are assumptions met?
-
 qqnorm(residuals(mod3)); qqline(residuals(mod3))
+#looks ok
+
