@@ -58,7 +58,7 @@ Volume_long$cm3 <- Volume_long$Volume/1000
 
 
 ht_full <- ggplot(Height_long, aes(x = Days, y = meters))+
-  geom_jitter(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE)+
   xlab("Days since planting")+
   ylab("Height (m)")
 
@@ -67,7 +67,7 @@ ht_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline.png", plot = ht_full, width = 6, height = 3, units = "in", dpi = 300)
 
 d_full <- ggplot(Diam_long, aes(x = Days, y = Diameter))+
-  geom_jitter(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE)+
   xlab("days since planting")+
   ylab("Diameter (mm)")
 
@@ -77,7 +77,7 @@ ggsave("2022_growth&inventory_analylsis/growth_graph/d_full.png", plot = d_full,
 
 
 vol_full <- ggplot(Volume_long, aes(x = Days, y = (cm3)))+
-  geom_jitter(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE)+
   xlab("days since planting")+
   ylab("Volume (cubic cm)")
 

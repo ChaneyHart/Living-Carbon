@@ -245,7 +245,8 @@ Jmax_comp2
 aov_Jmax <- aov(Jmax ~ event_short + block, data = Aci_growth)
 
 plot(aov_Jmax,which = 1)
-#looks good
+plot(aov_Jmax,which = 2)
+#normal and equal variance look ok, weird bump in normality in quantile 1.
 
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Jmax_comp.png",plot = Jmax_comp, width = 8, height = 5, units = "in", dpi = 300)
 ggsave("Jmax_comp_blockeff.png",plot = Jmax_comp2, width = 8, height = 5, units = "in", dpi = 300)
