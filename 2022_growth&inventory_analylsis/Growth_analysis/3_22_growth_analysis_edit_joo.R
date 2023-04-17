@@ -375,21 +375,26 @@ exp(0.1107)
 
 write.csv(growth,file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 
+
+###Volume w/o transformation
+
 # Fit model to test a difference between transgenic and control (construct2)
 # Check block effect
 # Volume
-mod000 <- lm(log(V497) ~ log(V49) + construct2 + block, data = growth)
+mod000 <- lm(V497 ~ V49 + construct2 + block, data = growth)
 summary(mod000)
-#Block is significant
+#Block is not significant but has influence
 
 # Make a block as a random effect
-v_mod3 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
-summary(v_mod3)
+v_mod3.1 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
+summary(v_mod3.1)
 
 # Residual and qq plots
-plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
+plot(fitted(v_mod3.1), residuals(v_mod3.1), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
-qqnorm(residuals(mod3)); qqline(residuals(mod3))
-#looks ok
+qqnorm(residuals(v_mod3.1)); qqline(residuals(v_mod3.1))
+
+
+
 
