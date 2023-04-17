@@ -395,6 +395,18 @@ plot(fitted(v_mod3.1), residuals(v_mod3.1), xlab="Fitted Values",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(v_mod3.1)); qqline(residuals(v_mod3.1))
 
+plot(v_mod3.1, which=3)
 
 
 
+v_mod4.1 <- lme(V497 ~ V49 + event2, random = ~1|block, data=growth)
+summary(v_mod4.1)
+
+plot(fitted(v_mod4.1), residuals(v_mod4.1), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(v_mod4.1)); qqline(residuals(v_mod4.1))
+#definitely don't look as good as height and diameter.
+#Q-Q plot shows there is a prominent right tail.
+
+emmeans(v_mod4.1, specs = pairwise ~event2)

@@ -181,6 +181,8 @@ ggsave("Vcmax_comp_blockeff.png",plot = Vcmax_comp2, width = 8, height = 5, unit
 
 #####1-way ANOVA w/ #####
 anova_Vcmax <- lm(Vcmax ~ event_short + block, data = Aci_growth)
+plot(aov_Vcmax, which = 2)
+#normality and homogeneity of variance for groups look ok
 anova(anova_Vcmax)
 
 
@@ -219,6 +221,7 @@ plot(fitted(Vcmax_mod1), residuals(Vcmax_mod1), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(Vcmax_mod1)); qqline(residuals(Vcmax_mod1))
+#residuals NOT randomly distributed, fishy
 
 ##############################3
 #Jmax
