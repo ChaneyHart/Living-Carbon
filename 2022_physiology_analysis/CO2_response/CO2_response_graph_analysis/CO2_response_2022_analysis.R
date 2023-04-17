@@ -60,7 +60,7 @@ Air_timecourse <- ggplot(Aci_growth,aes(x=X.x, y = Air_temp))+
   geom_path()+
   ylab('Ambient temp (˚C)')+
   xlab('tree')
-
+Air_timecourse
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Temp_timecourse.png",plot = Air_timecourse, dpi = 300)
 
 VPD_timecourse <- ggplot(Aci_growth,aes(x=X.x, y = Air_VPD))+
@@ -74,10 +74,11 @@ ggsave('2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/VPD_ti
 #explore covariates
 
 SPAD_covariate <- ggplot(Aci_growth, aes(x = spad, y = A_A_410))+
-  geom_point(aes(color = event_short))+
+  geom_point(aes(color = event_short),size = 3)+
   ylab("Ambient assimilation (mol/m^2*s)")+
   xlab("Chollorphyll density (SPAD)")
   
+SPAD_covariate
 ggsave('2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/SPAD_covariate.png', plot = SPAD_covariate, dpi = 300)
 
 ggplot(Aci_growth, aes(x = Jmax, y = spad))+
@@ -87,7 +88,7 @@ ggplot(Aci_growth, aes(x = J.Vc, y = spad))+
   geom_point()
 
 Air_temp_covariate <- ggplot(Aci_growth,aes(x = Air_temp, y = A_A_410))+
-  geom_point(aes(color = event_short))+
+  geom_point(aes(color = event_short),size = 3)+
   ylab("Ambient assimilation (mol/m^2*s)")+
   xlab("Ambient air temp (˚C)")
 Air_temp_covariate 
@@ -95,10 +96,10 @@ Air_temp_covariate
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Air_temp_covariate.png", plot = Air_temp_covariate, dpi = 300)
 
 Air_VPD_covariate <- ggplot(Aci_growth, aes(x = Air_VPD, y = A_A_410))+
-  geom_point(aes(color = event_short))+
+  geom_point(aes(color = event_short),size = 3)+
   ylab("Ambient assimilation (mol/m^2*s)")+
   xlab("Ambient air VPD (KPa)")
-
+Air_VPD_covariate
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Air_VPD_covariate.png", plot = Air_VPD_covariate, dpi = 300)
 
 ggplot(Aci_growth, aes(x=gsw_A_410, y = Vcmax))+
@@ -169,6 +170,7 @@ Vcmax_comp2
 aov_Vcmax <- aov(Vcmax ~ event_short + block, data = Aci_growth)
 
 plot(aov_Vcmax,which = 1)
+plot(aov_Vcmax, which = 2)
 #looks good
 
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Vcmax_comp.png",plot = Vcmax_comp, width = 8, height = 5, units = "in", dpi = 300)
@@ -180,7 +182,7 @@ ggsave("Vcmax_comp_blockeff.png",plot = Vcmax_comp2, width = 8, height = 5, unit
 #####1-way ANOVA w/ #####
 anova_Vcmax <- lm(Vcmax ~ event_short + block, data = Aci_growth)
 anova(anova_Vcmax)
-#There is moderate evidence of a difference that there is a difference in mean height for event (p-value: 0.09066)
+
 
 #Tukey contrasts####
 TukeyHSD(aov_Vcmax)
@@ -193,6 +195,10 @@ Aci_growth$construct2 <- as.factor(Aci_growth$construct2)
 Vcmax_Dunnets_aov <- aov(Vcmax ~ construct2 + block, data = Aci_growth)
 Vcmax_glht <- glht(Vcmax_Dunnets_aov,linfct = mcp(construct2 = "Dunnett"))
 summary(Vcmax_glht)
+
+
+#######mixed model##########
+
 
 ##############################3
 #Jmax

@@ -12,14 +12,14 @@ library(corrplot)
 #round 1
 
 #Diurnal curves (8_15_22)
-dat_rd1_Still <- read.csv("small_b_droughtstudy/round1/8_15_drought_00299_proc_chaneys_li600.csv", header = TRUE)
+dat_rd1_Still <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round1/8_15_drought_00299_proc_chaneys_li600.csv", header = TRUE)
 dat_rd1_Still <- subset(dat_rd1_Still, select = c(Time,Hour,ID,gsw,VPDleaf,PhiPS2,ETR,Tleaf,Qamb))
-dat_rd1_LC <- read.csv("small_b_droughtstudy/round1/8_15_drought_00354_proc_janes_li600.csv", header = TRUE)
+dat_rd1_LC <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round1/8_15_drought_00354_proc_janes_li600.csv", header = TRUE)
 dat_rd1_LC <- subset(dat_rd1_LC, select = c(Time,Hour,ID,gsw,VPDleaf,PhiPS2,ETR,Tleaf,Qamb))
 #combine data from both instruments
 dat_rd1_combined <- rbind(dat_rd1_Still, dat_rd1_LC)
 #import meta data w/ event, construct...etc
-dat_meta <- read.csv("DBH_H_timeline_CT1_excluded_9_22.csv")
+dat_meta <- read.csv("2022_growth&inventory_analylsis/growth_raw_collection/2022_compiled_growth&inventory/DBH_H_timeline_CT1_excluded_9_22.csv")
 dat_meta <- subset(dat_meta, select = c(row,column,ID,event_short, construct, construct2,block,H419))
 #match id to metadata
 dat_rd1 <- inner_join(dat_rd1_combined, dat_meta, by = "ID")
@@ -33,6 +33,8 @@ write.csv(rd1_construct_df, file = "small_b_droughtstudy/round1/rd1_construct_me
 rd_1_construct_plot <- ggplot(dat_rd1, aes(x = Hour, y = gsw, fill = construct2))+
   geom_boxplot()+
   ylab("stomatal conductance (mol/m^2*sec)")
+
+rd_1_construct_plot
 ggsave(filename = "small_b_droughtstudy/round1/rd_1_construct_plot.png", plot = rd_1_construct_plot, dpi = 300, width = 10, height = 4, units = "in")
 
 #summarize means by event and hour
@@ -170,8 +172,8 @@ anova(rd1_gsw_anova)
 
 ########predawn sampling##########
 #import data
-predawn_dat_rd1 <- read.csv("small_b_droughtstudy/round1/8_19_predawn_meas.csv")
-predawn_dat_rd1_li600 <- read.csv("small_b_droughtstudy/round1/Night sampling/Night_sampling_CH_2022_08_19_proc.csv")
+predawn_dat_rd1 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round1/8_19_predawn_meas.csv")
+predawn_dat_rd1_li600 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round1/Night sampling/Night_sampling_CH_2022_08_19_proc.csv")
 predawn_dat_rd1_li600 <- subset(predawn_dat_rd1_li600, select = c(ID,Fv.Fm))
 
 predawn_dat_rd1 <- inner_join(predawn_dat_rd1, predawn_dat_rd1_li600)
@@ -237,10 +239,10 @@ anova(rd_1_fvfm_model)
 
 # read in data for rounds 2 & 3
 
-predawn_dat_rd3 <- read.csv("small_b_droughtstudy/round3/rd_3_predawn_meas_proc.csv")
-predawn_dat_rd3_li600 <- read.csv("small_b_droughtstudy/round3/9_22_predawn_li600_rd3_proc.csv")
+predawn_dat_rd3 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round3/rd_3_predawn_meas_proc.csv")
+predawn_dat_rd3_li600 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round3/9_22_predawn_li600_rd3_proc.csv")
 predawn_dat_rd3_li600 <- subset(predawn_dat_rd3_li600, select = c(ID,Fv.Fm))
-predawn_dat_soil_moisture <- read.csv("small_b_droughtstudy/round3/9_19_soilmoisture.csv")
+predawn_dat_soil_moisture <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round3/9_19_soilmoisture.csv")
 
 predawn_dat_rd3 <- inner_join(predawn_dat_rd3, predawn_dat_rd3_li600)
 predawn_dat_rd3 <- left_join(predawn_dat_rd3, predawn_dat_soil_moisture, by = "ID")
@@ -251,8 +253,8 @@ predawn_dat_rd3 <- na.omit(predawn_dat_rd3)
 
 ###
 
-predawn_dat_rd2 <- read.csv("small_b_droughtstudy/round2/9_1_predawn_meas_proc.csv")
-predawn_dat_rd2_li600 <- read.csv("small_b_droughtstudy/round2/predawn_sampling_9_1_22_proc.csv")
+predawn_dat_rd2 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round2/9_1_predawn_meas_proc.csv")
+predawn_dat_rd2_li600 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round2/predawn_sampling_9_1_22_proc.csv")
 predawn_dat_rd2_li600 <- subset(predawn_dat_rd2_li600, select = c(ID,PhiPS2))
 
 predawn_dat_rd2 <- inner_join(predawn_dat_rd2, predawn_dat_rd2_li600)
@@ -312,12 +314,12 @@ predawn_rd3_summary <- predawn_rd3_construct %>% dplyr::summarise(
 )
 
 #xport to compile in excel
-write.csv(predawn_rd1_summary, file = "predawn_rd1_summary.csv")
-write.csv(predawn_rd2_summary, file = "predawn_rd2_summary.csv")
-write.csv(predawn_rd3_summary, file = "predawn_rd3_summary.csv")
+write.csv(predawn_rd1_summary, file = "2022_physiology_analysis/small_b_droughtstudy/predawn_rd1_summary.csv")
+write.csv(predawn_rd2_summary, file = "2022_physiology_analysis/small_b_droughtstudy/predawn_rd2_summary.csv")
+write.csv(predawn_rd3_summary, file = "2022_physiology_analysis/small_b_droughtstudy/predawn_rd3_summary.csv")
 
 #read compiled file back in
-predawn_summary <- read.csv("small_b_droughtstudy/Drought_study_conditions_summary.csv")
+predawn_summary <- read.csv("2022_physiology_analysis/small_b_droughtstudy/Drought_study_conditions_summary.csv")
 predawn_summary$Days <- as.factor(predawn_summary$Days)
 
 SM_plot <- ggplot(predawn_summary, aes(x=Days,y=Soil.Moisture))+
@@ -326,6 +328,7 @@ SM_plot <- ggplot(predawn_summary, aes(x=Days,y=Soil.Moisture))+
   ylab("Soil moisture (m^3/m^3)")+
   xlab("Days since drought")
 
+SM_plot
 ggsave(filename = "SM.png", plot=SM_plot, width=4.5, height =4, units = "in",dpi = 300)
 
 
@@ -345,5 +348,17 @@ FvFm_plot <- ggplot(predawn_summary, aes(x=Days,y=FvFm))+
   xlab("Days since drought")
 FvFm_plot
 
-ggsave(filename = "FvFm.png", plot=FvFm_plot, width=4.5, height = 4, units = "in",dpi = 300)
+#Remove day 17 data
+
+predawn_summary_II <- subset(predawn_summary, Days != 17)
+
+FvFm_plot_II <- ggplot(predawn_summary_II, aes(x=Days,y=FvFm))+
+  geom_point(aes(color = construct),size = 4)+
+  geom_errorbar(aes(ymin=FvFm-FvFm_se, ymax=FvFm+FvFm_se),linewidth = 0.4, width = 0.3)+
+  ylab("Max quantum yield of PSII (Fv/Fm)")+
+  xlab("Days since drought")
+FvFm_plot_II
+
+
+ggsave(filename = "FvFm.png", plot=FvFm_plot_II, width=4.5, height = 4, units = "in",dpi = 300)
        
