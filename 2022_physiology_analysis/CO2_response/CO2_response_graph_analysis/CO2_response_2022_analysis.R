@@ -198,7 +198,27 @@ summary(Vcmax_glht)
 
 
 #######mixed model##########
+library(car)
+library(emmeans)
+library(nlme)
 
+mmodel_0 <- lm(Vcmax ~ block + Air_temp + Air_VPD + spad, Aci_growth)
+summary(mmodel_0)
+vif(mmodel_0)
+#air temp and Air VPD collinear
+# remove VPD from model, air temp sufficient
+
+mmodel_1 <- lm(Vcmax ~ block + Air_temp + spad, Aci_growth)
+summary(mmodel_1)
+vif(mmodel_1)
+
+Vcmax_mod1 <- lme(Vcmax ~ block + construct2, random = ~1|Air_temp, data = Aci_growth)
+summary(Vcmax_mod1)
+
+plot(fitted(Vcmax_mod1), residuals(Vcmax_mod1), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(Vcmax_mod1)); qqline(residuals(Vcmax_mod1))
 
 ##############################3
 #Jmax

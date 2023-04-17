@@ -268,9 +268,21 @@ plot(fitted(mod3), residuals(mod3), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(mod3)); qqline(residuals(mod3))
-#
 
-# Effect of Construct (controls not pooled)
+##w/o log transformation #####
+
+mod4 <- lme(V497 ~ V49 + construct2, random = ~1|block, data = growth)
+summary(mod4)
+
+# Residual and qq plots
+plot(fitted(mod4), residuals(mod4), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(mod4)); qqline(residuals(mod4))
+
+
+
+#### Effect of Construct (controls not pooled)####################################
 ht_mod3 <- lme(H497 ~ H49 + construct, random = ~1|block, data = growth)
 summary(ht_mod3)
 
@@ -295,7 +307,7 @@ plot(fitted(d_mod3), residuals(d_mod3), xlab="Fitted Values",
 qqnorm(residuals(d_mod3)); qqline(residuals(d_mod3))
 
 
-v_mod3 <- lme((V497) ~ (V49) + construct, random = ~1|block, data = growth)
+v_mod3 <- lme(log(V497) ~ (log(V49)) + construct, random = ~1|block, data = growth)
 summary(v_mod3)
 
 emmeans(v_mod3, specs = pairwise ~construct)
@@ -305,6 +317,8 @@ emmeans(v_mod3, specs = pairwise ~construct)
 #exp(0.0622)
 #exp(0.0390)
 #exp(0.0970)
+
+#### w/o log transformation ######
 
 
 # Effect of event (escapes pooled)
