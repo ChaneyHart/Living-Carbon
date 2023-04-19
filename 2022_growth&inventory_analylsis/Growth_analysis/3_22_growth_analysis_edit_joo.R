@@ -95,6 +95,52 @@ ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_f
 (mean(growth$V144) - mean(growth$V49))/mean(growth$V49)
 
 
+#2022 height growth
+mean(growth$H497)
+H497_se <- sqrt(var(growth$H497)/(length(growth$H497)))
+
+mean(growth$H299)
+H299_se <- sqrt(var(growth$H299)/(length(growth$H299)))
+var(growth$H299)
+length(growth$H299)
+
+
+ht_percent_22_upper <- (((mean(growth$H497)+(2*H497_se)) - (mean(growth$H299)+(2*H299_se)))/(mean(growth$H299)+(2*H299_se)))*100
+ht_percent_22_lower <- (((mean(growth$H497)-(2*H497_se)) - (mean(growth$H299)-(2*H299_se)))/(mean(growth$H299)-(2*H299_se)))*100
+ht_percent_22 <- (((mean(growth$H497)) - (mean(growth$H299)))/(mean(growth$H299)))*100
+
+#2022 diameter growth
+mean(growth$D497)
+D497_se <- sqrt(var(growth$D497)/(length(growth$D497)))
+
+mean(growth$D299)
+D299_se <- sqrt(var(growth$D299)/(length(growth$D299)))
+var(growth$D299)
+length(growth$D299)
+
+
+diam_percent_22_upper <- (((mean(growth$D497)+(2*D497_se)) - (mean(growth$D299)+(2*D299_se)))/(mean(growth$D299)+(2*D299_se)))*100
+diam_percent_22_lower <- (((mean(growth$D497)-(2*D497_se)) - (mean(growth$D299)-(2*D299_se)))/(mean(growth$D299)-(2*D299_se)))*100
+diam_percent_22 <- (((mean(growth$D497)) - (mean(growth$D299)))/(mean(growth$D299)))*100
+
+#2022 volume growth
+mean(growth$V497_cm)
+V497_se <- sqrt(var(growth$V497_cm)/(length(growth$V497_cm)))
+
+mean(growth$V299_cm)
+V299_se <- sqrt(var(growth$V299_cm)/(length(growth$V299_cm)))
+
+
+
+v_percent_22_upper <- (((mean(growth$V497_cm)+(2*V497_se)) - (mean(growth$V299_cm)+(2*V299_se)))/(mean(growth$V299_cm)+(2*V299_se)))*100
+v_percent_22_lower <- (((mean(growth$V497_cm)-(2*V497_se)) - (mean(growth$V299_cm)-(2*V299_se)))/(mean(growth$V299_cm)-(2*V299_se)))*100
+v_percent_22 <- (((mean(growth$V497_cm)) - (mean(growth$V299_cm)))/(mean(growth$V299_cm)))*100
+
+
+mean(growth$V497) - mean(growth$V299)
+
+mean(growth$V299)
+
 ###statistical analysis##############
 ###First go at it by Chaney####
 ###simple models#####
