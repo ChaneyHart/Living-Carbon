@@ -45,19 +45,26 @@ ggplot(Nitrogen_dat, aes(x=Event, y = wt.N, fill = construct2))+
   geom_boxplot()+
   xlab("Event")+
   ylab("%Nitrogen (g/g)")
+
+N_anova <- lm(wt.N ~ Event, Nitrogen_dat)
+summary(N_anova)
+anova(N_anova)
+
+emmeans(N_anova, specs = pairwise ~ Event)
+
+mean(Nitrogen_dat$wt.N)
+
   
 ggplot(Nitrogen_dat, aes(x=construct2, y = wt.N, fill = construct2))+
   geom_boxplot()+
   xlab("Event")+
   ylab("%Nitrogen (g/g)")
   
-N_anova <- lm(wt.N ~ Event.x, Nitrogen_dat)
-summary(N_anova)
-anova(N_anova)
 
 N_anova2 <- lm(wt.N ~ construct2, Nitrogen_dat)
 summary(N_anova2)
 anova(N_anova2)
+emmeans(N_anova2, specs = pairwise ~ construct2)
 
 ggplot(Nitrogen_dat, aes(x=Event.x, y=SLA.cm2.g., fill = construct2))+
   geom_boxplot()
