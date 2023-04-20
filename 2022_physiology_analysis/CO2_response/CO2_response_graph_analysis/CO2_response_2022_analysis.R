@@ -79,6 +79,9 @@ SPAD_covariate <- ggplot(Aci_growth, aes(x = spad, y = A_A_410))+
   xlab("Chollorphyll density (SPAD)")
   
 SPAD_covariate
+A_SPAD <- lm(A_A_410 ~ spad, data = Aci_growth)
+summary(A_SPAD)
+
 ggsave('2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/SPAD_covariate.png', plot = SPAD_covariate, dpi = 300)
 
 ggplot(Aci_growth, aes(x = Jmax, y = spad))+
@@ -92,6 +95,9 @@ Air_temp_covariate <- ggplot(Aci_growth,aes(x = Air_temp, y = A_A_410))+
   ylab("Ambient assimilation (mol/m^2*s)")+
   xlab("Ambient air temp (˚C)")
 Air_temp_covariate 
+
+A_Air_temp <- lm(A_A_410 ~ Air_temp, data = Aci_growth)
+summary(A_Air_temp)
 
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Air_temp_covariate.png", plot = Air_temp_covariate, dpi = 300)
 
@@ -167,10 +173,7 @@ Vcmax_comp
 Vcmax_comp2
 #look for outliers 
 
-aov_Vcmax <- aov(Vcmax ~ event_short + block, data = Aci_growth)
 
-plot(aov_Vcmax,which = 1)
-plot(aov_Vcmax, which = 2)
 #looks good
 
 ggsave("2022_physiology_analysis/CO2_response/CO2_response_graph_analysis/Vcmax_comp.png",plot = Vcmax_comp, width = 8, height = 5, units = "in", dpi = 300)
@@ -180,11 +183,39 @@ ggsave("Vcmax_comp_blockeff.png",plot = Vcmax_comp2, width = 8, height = 5, unit
 
 
 #####1-way ANOVA w/ #####
-anova_Vcmax <- lm(Vcmax ~ event_short + block, data = Aci_growth)
+
+library(emmeans)
+library(nlme)
+
+##construct effect#####
+aov_Vcmax <- aov(Vcmax ~ construct + event + block, data = Aci_growth)
+
+plot(aov_Vcmax,which = 1)
 plot(aov_Vcmax, which = 2)
+anova_Vcmax <- lm(Vcmax ~ construct + event + block, data = Aci_growth)
 #normality and homogeneity of variance for groups look ok
 anova(anova_Vcmax)
 
+emmeans(anova_Vcmax, specs = pairwise ~construct)
+
+##effect size#######
+predict_set_Vcmax <- subset(Aci_growth, select = c("ID","event","event_short","construct","construct2","block","Vcmax","Jmax"))
+predict_set_Vcmax$predicted_Vcmax <- predict(anova_Vcmax, new_data = predict_set_Vcmax, interval = "confidence")
+
+#average modeled Vcmax
+modelled_control_mean_Vcmax <- mean(predict_set_Vcmax$predicted_Vcmax)
+modelled_transgenic_mean_Vcmax <- mean(predict_set_Vcmax$predicted_Vcmax) - 2.52
+modelled_escape_mean_Vcmax <- mean(predict_set_Vcmax$predicted_Vcmax) - 17.0
+
+construct_Vcmax_effect <- as.data.frame(c(modelled_control_mean_Vcmax, modelled_escape_mean_Vcmax, modelled_transgenic_mean_Vcmax))
+
+row.names(construct_Vcmax_effect) <- c("control","escape","transgenic")
+colnames(construct_Vcmax_effect) <- c("Vcmax")
+
+
+#for interest
+ggplot(predict_set_Vcmax,aes(x= Vcmax, y = predicted_Vcmax))+
+  geom_point()
 
 #Tukey contrasts####
 TukeyHSD(aov_Vcmax)
@@ -253,8 +284,38 @@ ggsave("Jmax_comp_blockeff.png",plot = Jmax_comp2, width = 8, height = 5, units 
 
 ##stats######
 
+##construct effect#####
+aov_Jmax <- aov(Jmax ~ construct + event + block, data = Aci_growth)
 
-#####1-way ANOVA w/ #####
+plot(aov_Jmax,which = 1)
+plot(aov_Jmax, which = 2)
+anova_Jmax <- lm(Jmax ~ construct + event + block, data = Aci_growth)
+#normality and homogeneity of variance for groups look ok
+anova(anova_Jmax)
+
+emmeans(anova_Jmax, specs = pairwise ~construct)
+
+##effect size#######
+predict_set_Jmax <- subset(Aci_growth, select = c("ID","event","event_short","construct","construct2","block","Vcmax","Jmax"))
+predict_set_Jmax$predicted_Jmax <- predict(anova_Jmax, new_data = predict_set_Jmax, interval = "confidence")
+
+#average modeled Jmax
+modelled_control_mean_Jmax <- mean(predict_set_Jmax$predicted_Jmax)
+modelled_transgenic_mean_Jmax <- mean(predict_set_Jmax$predicted_Jmax) - 3.87
+modelled_escape_mean_Jmax <- mean(predict_set_Jmax$predicted_Jmax) - 18.74
+
+construct_Jmax_effect <- as.data.frame(c(modelled_control_mean_Jmax, modelled_escape_mean_Jmax, modelled_transgenic_mean_Jmax))
+
+row.names(construct_Jmax_effect) <- c("control","escape","transgenic")
+colnames(construct_Jmax_effect) <- c("Jmax")
+
+
+#for interest
+ggplot(predict_set_Jmax,aes(x= Jmax, y = predicted_Jmax))+
+  geom_point()
+
+
+#####1-way ANOVA w/event #####
 anova_Jmax <- lm(Jmax ~ event_short + block, data = Aci_growth)
 anova(anova_Jmax)
 #There is moderate evidence of a difference that there is a difference in mean height for event (p-value: 0.09066)
