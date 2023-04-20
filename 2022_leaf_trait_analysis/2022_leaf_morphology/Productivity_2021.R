@@ -5,11 +5,13 @@ library(scales)
 library(tidyr)
 library(ggplot2)
 library(corrplot)
+library(emmeans)
+library(nlme)
 
-raw_isotope <- read.csv("Prelim_isotope_R.csv")
+raw_isotope <- read.csv("2022_leaf_trait_analysis/2022_leaf_morphology/Prelim_isotope_R.csv")
 raw_isotope <- dplyr::rename(raw_isotope, "ID" = "Sample")
 raw_isotope$GreenessScore <- as.factor(raw_isotope$GreenessScore)
-growth_summ <- read.csv("June_2022__growth_analysis_both_blocks.csv") 
+growth_summ <- read.csv("2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv") 
 SLA <- read.csv("2021_LMA.csv")
 SLA <- subset(SLA, select = c(ID, SLA.cm2.g.))
 
@@ -39,7 +41,7 @@ cor <- cor(nitrogen_pairs)
 corrplot(cor, method = "number")
 
 #comparing constructs
-ggplot(Nitrogen_dat, aes(x=Event.x, y = wt.N, fill = construct2))+
+ggplot(Nitrogen_dat, aes(x=Event, y = wt.N, fill = construct2))+
   geom_boxplot()+
   xlab("Event")+
   ylab("%Nitrogen (g/g)")
