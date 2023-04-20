@@ -126,8 +126,6 @@ diam_percent_22 <- (((mean(growth$D497)) - (mean(growth$D299)))/(mean(growth$D29
 #2022 volume growth
 mean(growth$V497_cm)
 V497_se <- sqrt(var(growth$V497_cm)/(length(growth$V497_cm)))
-
-mean(growth$V299_cm)
 V299_se <- sqrt(var(growth$V299_cm)/(length(growth$V299_cm)))
 
 
@@ -137,7 +135,7 @@ v_percent_22_lower <- (((mean(growth$V497_cm)-(2*V497_se)) - (mean(growth$V299_c
 v_percent_22 <- (((mean(growth$V497_cm)) - (mean(growth$V299_cm)))/(mean(growth$V299_cm)))*100
 
 
-mean(growth$V497) - mean(growth$V299)
+(median(growth$V497_cm) - median(growth$V299_cm))/(median(growth$V299_cm))
 
 mean(growth$V299)
 
@@ -332,19 +330,39 @@ qqnorm(residuals(mod4)); qqline(residuals(mod4))
 ht_mod3 <- lme(H497 ~ H49 + construct, random = ~1|block, data = growth)
 summary(ht_mod3)
 
-emmeans(ht_mod3, specs = pairwise ~construct)
-
 # Residual and qq plots
 plot(fitted(ht_mod3), residuals(ht_mod3), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(ht_mod3)); qqline(residuals(ht_mod3))
 
+emmeans(ht_mod3, specs = pairwise ~construct)
+
+#effect size
+
+predict_set_h <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","H49","H497"))
+predict_set_h$predicted_H497 <- predict(ht_mod3, new_data = predict_set_h, interval = "confidence")
+
+#average modeled height
+modelled_control_mean_ht <- mean(predict_set_h$predicted_H497)
+modelled_transgenic_mean_ht <- mean(predict_set_h$predicted_H497) + 169.0
+modelled_escape_mean_ht <- mean(predict_set_h$predicted_H497) + 92.1
+
+construct_height_effect <- as.data.frame(c(modelled_control_mean_ht, modelled_escape_mean_ht, modelled_transgenic_mean_ht))
+
+row.names(construct_height_effect) <- c("control","escape","transgenic")
+colnames(construct_height_effect) <- c("height")
+
+
+#for interest
+ggplot(predict_set_h,aes(x= H497, y = predicted_H497))+
+  geom_point()
+
+
+
+#diameter construct effect
 d_mod3 <- lme(D497 ~ D49 + construct, random = ~1|block, data = growth)
 summary(d_mod3)
-
-emmeans(d_mod3, specs = pairwise ~construct)
-
 
 # Residual and qq plots
 plot(fitted(d_mod3), residuals(d_mod3), xlab="Fitted Values",
@@ -352,9 +370,33 @@ plot(fitted(d_mod3), residuals(d_mod3), xlab="Fitted Values",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(d_mod3)); qqline(residuals(d_mod3))
 
+emmeans(d_mod3, specs = pairwise ~construct)
+
+predict_set_d <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","D49","D497"))
+predict_set_d$predicted_D497 <- predict(d_mod3, new_data = predict_set_d, interval = "confidence")
+
+#average modeled diameter
+modelled_control_mean_d <- mean(predict_set_d$predicted_D497)
+modelled_transgenic_mean_d <- mean(predict_set_d$predicted_D497) + 1.198
+modelled_escape_mean_d <- mean(predict_set_d$predicted_D497) + 1.324
+
+construct_diameter_effect <- as.data.frame(c(modelled_control_mean_d, modelled_escape_mean_d, modelled_transgenic_mean_d))
+
+row.names(construct_diameter_effect) <- c("control","escape","transgenic")
+colnames(construct_diameter_effect) <- c("diameter")
+
+
+
+###Volume construct effect
 
 v_mod3 <- lme(log(V497) ~ (log(V49)) + construct, random = ~1|block, data = growth)
 summary(v_mod3)
+
+# Residual and qq plots
+plot(fitted(v_mod3), residuals(v_mod3), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(v_mod3)); qqline(residuals(v_mod3))
 
 emmeans(v_mod3, specs = pairwise ~construct)
 #exp(0.1082)
@@ -364,10 +406,27 @@ emmeans(v_mod3, specs = pairwise ~construct)
 #exp(0.0390)
 #exp(0.0970)
 
-#### w/o log transformation ######
+predict_set_v <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","V49","V497"))
+predict_set_v$predicted_V497 <- exp(predict(v_mod3, new_data = predict_set_v, interval = "confidence"))
+
+#check
+ggplot(predict_set_v,aes(x= log(V497), y = predicted_V497))+
+  geom_point()
+mean(predict_set_v$V497)
+
+#average modeled volume
+
+modelled_control_mean_v <- (mean(predict_set_v$predicted_V497))
+modelled_transgenic_mean_v <- ((mean(predict_set_v$predicted_V497))*(exp(0.1082)))
+modelled_escape_mean_v <- ((mean(predict_set_v$predicted_V497))*(exp(0.0390)))
+
+construct_volume_effect <- as.data.frame(c(modelled_control_mean_v, modelled_escape_mean_v, modelled_transgenic_mean_v))
+
+row.names(construct_volume_effect) <- c("control","escape","transgenic")
+colnames(construct_volume_effect) <- c("volume_index")
 
 
-# Effect of event (escapes pooled)
+######### Effect of event (escapes pooled) ######
 ht_mod4 <- lme(H497 ~ H49 + event2, random = ~1|block, data = growth)
 summary(ht_mod4)
 
@@ -378,6 +437,27 @@ plot(fitted(ht_mod4), residuals(ht_mod4), xlab="Fitted Values",
 qqnorm(residuals(ht_mod4)); qqline(residuals(ht_mod4))
 
 emmeans(ht_mod4, specs = pairwise ~event2)
+
+#Effect size
+predict_set_h_II <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","H49","H497"))
+predict_set_h_II$predicted_H497 <- predict(ht_mod4, new_data = predict_set_h_II, interval = "confidence")
+
+#average modeled height
+modelled_CT3_mean_ht <- mean(predict_set_h_II$predicted_H497)
+modelled_pooled_escape_mean_ht <- mean(predict_set_h_II$predicted_H497) + 91.466
+modelled_5A_mean_ht <- mean(predict_set_h_II$predicted_H497) + 413.380
+modelled_5C_mean_ht <- mean(predict_set_h_II$predicted_H497) + 221.024
+modelled_5_mean_ht <- mean(predict_set_h_II$predicted_H497) + 261.446
+modelled_2H_mean_ht <- mean(predict_set_h_II$predicted_H497) - 64.454
+modelled_13_15E_mean_ht <- mean(predict_set_h_II$predicted_H497) + 32.196
+modelled_13_15B_mean_ht <- mean(predict_set_h_II$predicted_H497) + 43.547
+
+event_height_effect <- as.data.frame(c(modelled_CT3_mean_ht, modelled_pooled_escape_mean_ht, modelled_5A_mean_ht, modelled_5C_mean_ht, modelled_5_mean_ht, modelled_2H_mean_ht, modelled_13_15E_mean_ht, modelled_13_15B_mean_ht))
+
+row.names(event_height_effect) <- c("control","escape","5A","5C","5","2H","13_15E","13_15B")
+colnames(event_height_effect) <- c("height")
+
+####diameter event effect#######
 
 d_mod4 <- lme(D497 ~ D49 + event2, random = ~1|block, data = growth)
 summary(d_mod4)
@@ -390,6 +470,28 @@ qqnorm(residuals(d_mod4)); qqline(residuals(d_mod4))
 
 emmeans(d_mod4, specs = pairwise ~event2)
 
+#Effect size
+predict_set_d_II <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","D49","D497"))
+predict_set_d_II$predicted_D497 <- predict(d_mod4, new_data = predict_set_d_II, interval = "confidence")
+
+#average modeled height
+modelled_CT3_mean_d <- mean(predict_set_d_II$predicted_D497)
+modelled_pooled_escape_mean_d <- mean(predict_set_d_II$predicted_D497) + 1.3197
+modelled_5A_mean_d <- mean(predict_set_d_II$predicted_D497) + 3.0533
+modelled_5C_mean_d <- mean(predict_set_d_II$predicted_D497) + 1.9791
+modelled_5_mean_d <- mean(predict_set_d_II$predicted_D497) + 1.5744
+modelled_2H_mean_d <- mean(predict_set_d_II$predicted_D497) - 0.3084
+modelled_13_15E_mean_d <- mean(predict_set_d_II$predicted_D497) + 0.4132
+modelled_13_15B_mean_d <- mean(predict_set_d_II$predicted_D497) + 0.5951
+
+event_diameter_effect <- as.data.frame(c(modelled_CT3_mean_d, modelled_pooled_escape_mean_d, modelled_5A_mean_d, modelled_5C_mean_d, modelled_5_mean_d, modelled_2H_mean_d, modelled_13_15E_mean_d, modelled_13_15B_mean_d))
+
+row.names(event_diameter_effect) <- c("control","escape","5A","5C","5","2H","13_15E","13_15B")
+colnames(event_diameter_effect) <- c("diameter")
+
+
+###volume event effect
+
 v_mod4 <- lme(log(V497) ~ log(V49) + event2, random = ~1|block, data=growth)
 summary(v_mod4)
 
@@ -397,8 +499,6 @@ plot(fitted(v_mod4), residuals(v_mod4), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(v_mod4)); qqline(residuals(v_mod4))
-#definitely don't look as good as height and diameter.
-#Q-Q plot shows there is a prominent right tail.
 
 emmeans(v_mod4, specs = pairwise ~event2)
 
@@ -418,6 +518,35 @@ exp(0.1099)
 exp(0.33052)
 exp(0.1107)
 #
+
+##Effect size
+
+#Effect size
+predict_set_v_II <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","V49","V497"))
+predict_set_v_II$predicted_V497 <- exp(predict(v_mod4, new_data = predict_set_v_II, interval = "confidence"))
+
+#check
+ggplot(predict_set_v_II,aes(x= log(V497), y = predicted_V497))+
+  geom_point()
+mean(predict_set_v_II$V497)
+
+#average modeled volume
+modelled_CT3_mean_v <- mean(predict_set_v_II$predicted_V497)
+modelled_pooled_escape_mean_v <- mean(predict_set_v_II$predicted_V497)*(exp(0.03853))
+modelled_5A_mean_v <- mean(predict_set_v_II$predicted_V497)*(exp(0.26264))
+modelled_5C_mean_v <- mean(predict_set_v_II$predicted_V497)*(exp(0.16925))
+modelled_5_mean_v <- mean(predict_set_v_II$predicted_V497)*(exp(0.23164))
+modelled_2H_mean_v <- mean(predict_set_v_II$predicted_V497)/(exp(0.06788))
+modelled_13_15E_mean_v <- mean(predict_set_v_II$predicted_V497)/(exp(0.02161))
+modelled_13_15B_mean_v <- mean(predict_set_v_II$predicted_V497)/(exp(0.06590))
+
+event_volume_effect <- as.data.frame(c(modelled_CT3_mean_v, modelled_pooled_escape_mean_v, modelled_5A_mean_v, modelled_5C_mean_v, modelled_5_mean_v, modelled_2H_mean_v, modelled_13_15E_mean_v, modelled_13_15B_mean_v))
+
+row.names(event_volume_effect) <- c("control","escape","5A","5C","5","2H","13_15E","13_15B")
+colnames(event_volume_effect) <- c("volume")
+
+
+###############
 
 write.csv(growth,file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 
