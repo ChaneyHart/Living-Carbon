@@ -550,6 +550,26 @@ colnames(event_volume_effect) <- c("volume")
 
 write.csv(growth,file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 
+###table to summarize mean volume per event
+Volume_summary <- data_frame()
+event_volume <- as.data.frame(aggregate(V497_cm ~ event_short, data = growth, FUN = mean))
+event_var <- aggregate(V497_cm ~ event_short, data = growth, FUN = var)
+event_n <- aggregate(V497_cm ~ event_short, data = growth, FUN = length)
+
+event_volume_summary <- inner_join(event_volume, event_var, by = "event_short")
+event_volume_summary <- inner_join(event_volume_summary, event_n, by = "event_short")
+
+colnames(event_volume_summary) <- c("Event", "mean_Volume","var","n")
+
+event_volume_summary$se <- sqrt(event_volume_summary$var/event_volume_summary$n)
+event_volume_summary$tst <- qt(0.975, event_volume_summary$n)
+event_volume_summary$sd <- sqrt(event_volume_summary$var)
+qt(0.975, 21)
+qt(0.975, 29)
+#can estimate quartile for all to be 2
+event_volume_summary$upper_volume <- event_volume_summary$mean_Volume + (event_volume_summary$tst*event_volume_summary$se)
+event_volume_summary$lower_volume <- event_volume_summary$mean_Volume - (event_volume_summary$tst*event_volume_summary$se)
+
 
 ###Volume w/o transformation
 
