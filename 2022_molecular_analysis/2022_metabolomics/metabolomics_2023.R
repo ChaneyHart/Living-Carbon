@@ -9,11 +9,24 @@ library(GGally)
 library(ggbiplot)
 
 
-str(metabolomics)
+
 metabolomics <- read.csv(file = "2022_molecular_analysis/2022_metabolomics/metabolomics_final_raw.csv")
 str(metabolomics)
 growth <- read.csv(file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 metabolomics_II <- inner_join(metabolomics, growth, by = "ID")
+
+#gene expression data by tree
+#gene expression data from both years
+#read in compiled csv
+by_tree <- read.csv("2022_molecular_analysis/2022_gene_expression/Gene_exp_bytree_both_yrs.csv")
+str(by_tree)
+by_tree$PLGG1_2021 <- as.numeric(by_tree$PLGG1_2021)
+by_tree$GDH_2021 <- as.numeric(by_tree$GDH_2021)
+by_tree$MS_2021 <- as.numeric(by_tree$MS_2021)
+by_tree$PLGG1_avg <- as.numeric(by_tree$PLGG1_avg)
+by_tree$GDH_avg <- as.numeric(by_tree$GDH_avg)
+by_tree$MS_avg <- as.numeric(by_tree$MS_avg)
+by_tree$transgene_avg <- as.numeric(by_tree$transgene_avg)
 
 
 
@@ -23,27 +36,57 @@ str(metabolomics_III)
 glycolate_event <- ggplot(metabolomics_III, aes(x=event_short, y = glycolic.acid, fill = construct2.x))+
   geom_boxplot()+
   geom_signif(comparisons = list(c("13-15E","CT3")),map_signif_level=TRUE)+
-  geom_signif(comparisons = list(c("2H","CT3")),map_signif_level=TRUE, y_position = 6000)
+  geom_signif(comparisons = list(c("2H","CT3")),map_signif_level=TRUE, y_position = 6000)+
+  ylab("Relative glycolate level (to IS)")+
+  xlab("event")
 
 glycolate_event
 ggsave(filename = "glycolate_event.png", plot = glycolate_event, dpi = 300)
 
+###statisitcs for glycolate#####
 
-#gene expression data from both years
-#read in compiled csv
-by_tree <- read.csv("PAG_analysis/Gene_exp_bytree_both_yrs.csv")
-str(by_tree)
-by_tree$PLGG1_2021 <- as.numeric(by_tree$PLGG1_2021)
-by_tree$GDH_2021 <- as.numeric(by_tree$GDH_2021)
-by_tree$MS_2021 <- as.numeric(by_tree$MS_2021)
-by_tree$PLGG1_avg <- as.numeric(by_tree$PLGG1_avg)
-by_tree$GDH_avg <- as.numeric(by_tree$GDH_avg)
-by_tree$MS_avg <- as.numeric(by_tree$MS_avg)
+##event comparison###
+
+# Combine 16-20 and 8-9D
+metabolomics_III$event2 <- metabolomics_III$event
+metabolomics_III$event2[metabolomics_III$event == "LC-102 16-20" |
+                metabolomics_III$event == "LC-102 8-9D"] <- "escape"
+
+glycolate_event_model <- lm(glycolic.acid ~ event2 +block, data = metabolomics_III)
+summary(glycolate_event_model)
+#block is significant, include as random effect
+
+library(nlme)
+library(emmeans)
+
+glycolate_event_model.2 <- lme(log(glycolic.acid) ~ event2, random = ~1|block, data = metabolomics_III)
+summary(glycolate_event_model.2)
+
+plot(fitted(glycolate_event_model.2), residuals(glycolate_event_model.2), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(glycolate_event_model.2)); qqline(residuals(glycolate_event_model.2))
+##log transformation definitely helped
+
+emmeans(glycolate_event_model.2, specs = pairwise ~event2)
+
+emmeans(glycolate_event_model.2, specs = pairwise ~event2)$contrasts
+
+
+glycolate_event_summary <- as.data.frame(emmeans(glycolate_event_model.2, specs = pairwise ~event2)$contrasts)
+glycolate_event_summary$effect_size <- (round(exp(-1*(glycolate_event_summary$estimate)),3)-1)*100
+glycolate_event_summary$p.value <- round(glycolate_event_summary$p.value,3)
+glycolate_event_summary$estimate <- round(glycolate_event_summary$estimate,3)
+glycolate_event_summary$SE <- round(glycolate_event_summary$SE,2)
+
+
+
+write.csv(glycolate_event_summary, file = "2022_molecular_analysis/2022_metabolomics/glycolate_event_summary_stats.csv")
 
 metabolomics_IV <- inner_join(metabolomics_III, by_tree, by = "ID")
 
 glycolate_plgg1_plot <- ggplot(metabolomics_IV,aes(x= PLGG1_avg.y, y = log(glycolic.acid)))+
-  geom_point(aes(colour = metabolomics_IV$event_short, shape = construct2),size=2)
+  geom_point(aes(colour = metabolomics_III$event_short, shape = construct2),size=2)
  
 glycolate_plgg1_lm <- lm(log(glycolic.acid)~PLGG1_avg.y + event_short, data = metabolomics_IV)
 glycolate_plgg1_aov <- aov(log(glycolic.acid)~PLGG1_avg.y + event_short, data = metabolomics_IV)

@@ -570,6 +570,7 @@ qt(0.975, 29)
 event_volume_summary$upper_volume <- event_volume_summary$mean_Volume + (event_volume_summary$tst*event_volume_summary$se)
 event_volume_summary$lower_volume <- event_volume_summary$mean_Volume - (event_volume_summary$tst*event_volume_summary$se)
 
+write.csv(event_volume_summary, file = "2022_growth&inventory_analylsis/growth_analysis/event_volume_table.csv")
 
 ###Volume w/o transformation
 
