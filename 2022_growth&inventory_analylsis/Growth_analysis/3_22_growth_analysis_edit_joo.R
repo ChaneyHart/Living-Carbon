@@ -86,6 +86,72 @@ vol_full <- ggplot(Volume_long, aes(x = Days, y = (cm3)))+
 vol_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_full, width = 6, height = 3, units = "in", dpi = 300)
 
+### same thing but broken down by event means######
+
+
+#Height###
+
+Height_long_II <- Height_long %>% group_by(event_short,Days)
+
+Height_long_II_summary <- Height_long_II %>% dplyr::summarise(
+  height = mean(meters),
+  n = n(),
+  height_sd = sd(meters),
+  height_se = height_sd/(sqrt(n))
+)
+
+ht_full_event <- ggplot(Height_long_II_summary, aes(x = Days, y = height))+
+  geom_point(aes(color = event_short), show.legend = TRUE)+
+  xlab("Days since planting")+
+  ylab("Height (m)")
+  
+
+ht_full_event
+ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event.png", plot = ht_full_event, width = 6, height = 3, units = "in", dpi = 300)
+
+
+###diameter by event #####
+
+diam_long_II <- Diam_long %>% group_by(event_short,Days)
+
+diam_long_II_summary <- diam_long_II %>% dplyr::summarise(
+  diam = mean(Diameter),
+  n = n(),
+  diameter_sd = sd(Diameter),
+  diameter_se = diameter_sd/(sqrt(n))
+)
+
+Diam_full_event <- ggplot(diam_long_II_summary, aes(x = Days, y = diam))+
+  geom_point(aes(color = event_short), show.legend = TRUE)+
+  xlab("Days since planting")+
+  ylab("diameter (mm)")
+
+
+Diam_full_event
+ggsave("2022_growth&inventory_analylsis/growth_graph/Diam_timeline_event.png", plot = Diam_full_event, width = 6, height = 3, units = "in", dpi = 300)
+
+#####volume by event ###########
+
+vol_long_II <- vol_long %>% group_by(event_short,Days)
+
+vol_long_II_summary <- vol_long_II %>% dplyr::summarise(
+  vol = mean(vol),
+  n = n(),
+  voleter_sd = sd(vol),
+  voleter_se = vol_sd/(sqrt(n))
+)
+
+vol_full_event <- ggplot(vol_long_II_summary, aes(x = Days, y = vol))+
+  geom_point(aes(color = event_short), show.legend = TRUE)+
+  xlab("Days since planting")+
+  ylab("Volume (cubic cm)")
+
+
+vol_full_event
+ggsave("2022_growth&inventory_analylsis/growth_graph/vol_timeline_event.png", plot = vol_full_event, width = 6, height = 3, units = "in", dpi = 300)
+
+
+
 #Summary statistics
 #2021 height growth
 (mean(growth$H144) - mean(growth$H49))/mean(growth$H49)
