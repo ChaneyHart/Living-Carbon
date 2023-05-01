@@ -331,6 +331,11 @@ SM_plot <- ggplot(predawn_summary, aes(x=Days,y=Soil.Moisture))+
 SM_plot
 ggsave(filename = "SM.png", plot=SM_plot, width=4.5, height =4, units = "in",dpi = 300)
 
+#effect size
+
+aggregate(Soil.Moisture ~ c(Days), data = predawn_summary, FUN = mean)
+
+predawn_summary_II
 
 MPa_plot <- ggplot(predawn_summary, aes(x=Days,y=Mpa))+
   geom_point(aes(color = construct),size = 4)+
@@ -358,6 +363,11 @@ FvFm_plot_II <- ggplot(predawn_summary_II, aes(x=Days,y=FvFm))+
   ylab("Max quantum yield of PSII (Fv/Fm)")+
   xlab("Days since drought")
 FvFm_plot_II
+
+###effect size
+
+aggregate(FvFm ~ c(Days), data = predawn_summary_II, FUN = mean)
+
 
 
 ggsave(filename = "FvFm.png", plot=FvFm_plot_II, width=4.5, height = 4, units = "in",dpi = 300)
