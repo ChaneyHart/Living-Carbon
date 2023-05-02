@@ -91,7 +91,7 @@ ggsave("2022_growth&inventory_analylsis/growth_graph/vol_full.png", plot = vol_f
 
 #Height###
 
-Height_long_II <- Height_long %>% group_by(event_short,Days)
+Height_long_II <- Height_long %>% group_by(event_short,Days,block)
 
 Height_long_II_summary <- Height_long_II %>% dplyr::summarise(
   height = mean(meters),
@@ -100,14 +100,39 @@ Height_long_II_summary <- Height_long_II %>% dplyr::summarise(
   height_se = height_sd/(sqrt(n))
 )
 
-ht_full_event <- ggplot(Height_long_II_summary, aes(x = Days, y = height))+
+Height_long_III <- Height_long %>% group_by(event_short,Days)
+
+Height_long_III_summary <- Height_long_III %>% dplyr::summarise(
+  height = mean(meters),
+  n = n(),
+  height_sd = sd(meters),
+  height_se = height_sd/(sqrt(n))
+)
+
+ht_full_event <- ggplot(Height_long_III_summary, aes(x = Days, y = height))+
   geom_point(aes(color = event_short), show.legend = TRUE)+
   xlab("Days since planting")+
   ylab("Height (m)")
+#large block
+ht_full_event_lb <- ggplot(subset(Height_long_II_summary, block == "large"), aes(x = Days, y = height))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("height (m)")
+##small block
+ht_full_event_sb <- ggplot(subset(Height_long_II_summary, block == "small"), aes(x = Days, y = height))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("height (m)")
+
   
 
 ht_full_event
+ht_full_event_lb
+ht_full_event_sb
 ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event.png", plot = ht_full_event, width = 6, height = 4, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event_lb.png", plot = ht_full_event_lb, width = 5, height = 4, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event_sb.png", plot = ht_full_event_sb, width = 5, height = 4, units = "in", dpi = 300)
+
 
 
 ###diameter by event #####
@@ -420,6 +445,9 @@ qqnorm(residuals(mod2)); qqline(residuals(mod2))
 mod000 <- lm(log(V497) ~ log(V49) + construct2 + block, data = growth)
 summary(mod000)
 #Block is significant
+exp(0.30454)
+mean(growth$V497_cm)
+1882.064*0.35
 
 # Make a block as a random effect
 mod3 <- lme(log(V497) ~ log(V49) + construct2, random = ~1|block, data = growth)

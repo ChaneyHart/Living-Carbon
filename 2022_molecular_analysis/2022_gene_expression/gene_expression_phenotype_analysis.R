@@ -161,16 +161,13 @@ physII_summary <- phys_event_II %>% dplyr::summarise(
 
 phys_summary_III <- inner_join(phys_summary, physII_summary, by = "event")
 
-growth_event <- growth %>% group_by(event)
+growth_event <- growth %>% group_by(event,block)
 
 growth_summary <- growth_event %>% dplyr::summarize(
   n = n(),
   VI_sd = sd(VI),
   VI = mean(VI),
   VI_se = (VI_sd/(sqrt(n))),
-  Chl_sd = sd(Aug_SPAD),
-  Chl = mean(Aug_SPAD),
-  Chl_se = (Chl_sd/(sqrt(n)))
 )
 
 #join datasets of event means
@@ -179,6 +176,7 @@ growth_phys_summary <- inner_join(phys_summary_III, growth_summary, by = "event"
 
 opt1_gene_summary$event <- opt1_gene_summary$Event
 opt1_full_summary <- inner_join(opt1_gene_summary, growth_phys_summary, by = "event")
+opt1_full_summary_lb <- subset(opt1_full_summary, block == "large")
 
 #
 #examine relationship between variables via correlation matrix
@@ -189,14 +187,14 @@ ggsave(filename = "opt1_full_cor_plot.png", plot = opt1_full_cor_plot, width = 6
 #ok, pretty busy
 
 
-opt1_full_set <- opt1_full_summary[,c(4,7,10,18,21,24,27,38,41)]
+opt1_full_set_lb <- opt1_full_summary_lb[,c(4,7,10,18,21,24,27,38,41)]
 opt1_PCA_full <- prcomp(opt1_full_set, center = TRUE, scale. = TRUE)
 summary(opt1_PCA_full)
 
 ggbiplot(opt1_PCA_full)
 #nice
 
-opt1_full_summary$Event_short <- c("13-15B","13-15E","2H","4A","5A","5C","7")
+opt1_full_summary_lb$Event_short <- c("13-15B","13-15E","2H","4A","5A","5C","7")
 
 opt1_full_PCAplot <- ggbiplot(opt1_PCA_full, obs.scale = 1.5, var.scale = 5, ellipse = TRUE)+
   ggtitle("phenotype PCA by event")+
