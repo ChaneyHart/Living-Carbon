@@ -107,12 +107,12 @@ ht_full_event <- ggplot(Height_long_II_summary, aes(x = Days, y = height))+
   
 
 ht_full_event
-ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event.png", plot = ht_full_event, width = 6, height = 3, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline_event.png", plot = ht_full_event, width = 6, height = 4, units = "in", dpi = 300)
 
 
 ###diameter by event #####
 
-diam_long_II <- Diam_long %>% group_by(event_short,Days)
+diam_long_II <- Diam_long %>% group_by(event_short,Days, block)
 
 diam_long_II_summary <- diam_long_II %>% dplyr::summarise(
   diam = mean(Diameter),
@@ -121,34 +121,86 @@ diam_long_II_summary <- diam_long_II %>% dplyr::summarise(
   diameter_se = diameter_sd/(sqrt(n))
 )
 
-Diam_full_event <- ggplot(diam_long_II_summary, aes(x = Days, y = diam))+
-  geom_point(aes(color = event_short), show.legend = TRUE)+
+diam_long_III <- Diam_long %>% group_by(event_short,Days)
+
+diam_long_III_summary <- diam_long_III %>% dplyr::summarise(
+  diam = mean(Diameter),
+  n = n(),
+  diameter_sd = sd(Diameter),
+  diameter_se = diameter_sd/(sqrt(n))
+)
+
+
+#all
+Diam_full_event <- ggplot(diam_long_III_summary, aes(x = Days, y = diam))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
   xlab("Days since planting")+
   ylab("diameter (mm)")
 
+#large block
+Diam_full_event_lb <- ggplot(subset(diam_long_II_summary, block == "large"), aes(x = Days, y = diam))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("diameter (mm)")
+##small block
+Diam_full_event_sb <- ggplot(subset(diam_long_II_summary, block == "small"), aes(x = Days, y = diam))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("diameter (mm)")
 
 Diam_full_event
+Diam_full_event_lb
+Diam_full_event_sb
 ggsave("2022_growth&inventory_analylsis/growth_graph/Diam_timeline_event.png", plot = Diam_full_event, width = 6, height = 3, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/Diam_timeline_event_lb.png", plot = Diam_full_event_lb, width = 5, height = 4, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/Diam_timeline_event_sb.png", plot = Diam_full_event_sb, width = 5, height = 4, units = "in", dpi = 300)
+
 
 #####volume by event ###########
 
-vol_long_II <- vol_long %>% group_by(event_short,Days)
+volume_long_II <- Volume_long %>% group_by(event_short,Days, block)
+volume_long_III <- Volume_long %>% group_by(event_short,Days)
 
-vol_long_II_summary <- vol_long_II %>% dplyr::summarise(
-  vol = mean(vol),
+volume_long_II_summary <- volume_long_II %>% dplyr::summarise(
+  vol = mean(cm3),
   n = n(),
-  voleter_sd = sd(vol),
-  voleter_se = vol_sd/(sqrt(n))
+  vol_sd = sd(cm3),
+  vol_se = vol_sd/(sqrt(n))
 )
 
-vol_full_event <- ggplot(vol_long_II_summary, aes(x = Days, y = vol))+
-  geom_point(aes(color = event_short), show.legend = TRUE)+
+volume_long_III_summary <- volume_long_III %>% dplyr::summarise(
+  vol = mean(cm3),
+  n = n(),
+  vol_sd = sd(cm3),
+  vol_se = vol_sd/(sqrt(n))
+)
+
+
+vol_full_event <- ggplot(volume_long_III_summary, aes(x = Days, y = vol))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
   xlab("Days since planting")+
-  ylab("Volume (cubic cm)")
+  ylab("Volume index (cubic cm)")
+
+#large block
+vol_full_event_lb <- ggplot(subset(volume_long_II_summary, block == "large"), aes(x = Days, y = vol))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("Volume index (cubic cm)")
+
+#small block
+
+vol_full_event_sb <- ggplot(subset(volume_long_II_summary, block == "small"), aes(x = Days, y = vol))+
+  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  xlab("Days since planting")+
+  ylab("Volume index (cubic cm)")
 
 
 vol_full_event
+vol_full_event_lb
+vol_full_event_sb
 ggsave("2022_growth&inventory_analylsis/growth_graph/vol_timeline_event.png", plot = vol_full_event, width = 6, height = 3, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/vol_timeline_event_lb.png", plot = vol_full_event_lb, width = 5, height = 4, units = "in", dpi = 300)
+ggsave("2022_growth&inventory_analylsis/growth_graph/vol_timeline_event_sb.png", plot = vol_full_event_sb, width = 5, height = 4, units = "in", dpi = 300)
 
 
 
