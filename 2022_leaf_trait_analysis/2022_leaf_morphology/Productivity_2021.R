@@ -41,10 +41,14 @@ cor <- cor(nitrogen_pairs)
 corrplot(cor, method = "number")
 
 #comparing constructs
-ggplot(Nitrogen_dat, aes(x=Event, y = wt.N, fill = construct2))+
+Nitrogen_2021_event <- ggplot(Nitrogen_dat, aes(x=Event, y = wt.N, fill = construct2))+
   geom_boxplot()+
   xlab("Event")+
-  ylab("%Nitrogen (g/g)")
+  ylab("%Nitrogen (g/g)")+
+  scale_fill_discrete(name = "Construct", labels = c("Escape", "Transgenic"))
+
+Nitrogen_2021_event
+ggsave(filename = "2022_leaf_trait_analysis/2022_stable_isotopes_Nitrogen/Nitrogen_2021_event_comp.png", plot = Nitrogen_2021_event, dpi = 300)
 
 N_anova <- lm(wt.N ~ Event, Nitrogen_dat)
 summary(N_anova)
@@ -52,13 +56,18 @@ anova(N_anova)
 
 emmeans(N_anova, specs = pairwise ~ Event)
 
+
+
+
 mean(Nitrogen_dat$wt.N)
 
   
 ggplot(Nitrogen_dat, aes(x=construct2, y = wt.N, fill = construct2))+
   geom_boxplot()+
   xlab("Event")+
-  ylab("%Nitrogen (g/g)")
+  ylab("%Nitrogen (g/g)")+
+  labs(fill = "Construct")
+  
   
 
 N_anova2 <- lm(wt.N ~ construct2, Nitrogen_dat)

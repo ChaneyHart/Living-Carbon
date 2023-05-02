@@ -187,8 +187,9 @@ ggsave(filename = "opt1_full_cor_plot.png", plot = opt1_full_cor_plot, width = 6
 #ok, pretty busy
 
 
-opt1_full_set_lb <- opt1_full_summary_lb[,c(4,7,10,18,21,24,27,38,41)]
-opt1_PCA_full <- prcomp(opt1_full_set, center = TRUE, scale. = TRUE)
+opt1_full_set_lb <- subset(opt1_full_summary_lb, select = c(PC_Exp_1,PC_Exp_2_se,VI))
+                          
+opt1_PCA_full <- prcomp(opt1_full_set_lb, center = TRUE, scale. = TRUE)
 summary(opt1_PCA_full)
 
 ggbiplot(opt1_PCA_full)
@@ -220,7 +221,7 @@ opt1_full_PCAplot2
 
 #######
 #plotting scatterplots to drive home interpretation of PCA
-PC1_vol <- ggplot(opt1_full_summary, aes(x = PC_Exp_1, y = VI))+
+PC1_vol <- ggplot(opt1_full_summary_lb, aes(x = PC_Exp_1, y = VI))+
   geom_point(aes(color = Event_short),size=4)+
   geom_errorbar(aes(xmin = PC_Exp_1-PC_Exp_1_se, xmax = PC_Exp_1+PC_Exp_1_se))+
   geom_errorbar(aes(ymin = VI-VI_se, ymax=VI+VI_se))+
@@ -229,10 +230,10 @@ PC1_vol <- ggplot(opt1_full_summary, aes(x = PC_Exp_1, y = VI))+
 PC1_vol
 ggsave(filename = "PC1_vol.png", plot = PC1_vol, dpi = 300)
 
-PC_VI_model <- lm(VI~PC_Exp_1, opt1_full_summary)
+PC_VI_model <- lm(VI~PC_Exp_1, opt1_full_summary_lb)
 summary(PC_VI_model)
 
-PC2_vol <- ggplot(opt1_full_summary, aes(x = PC_Exp_2, y = VI))+
+PC2_vol <- ggplot(opt1_full_summary_lb, aes(x = PC_Exp_2, y = VI))+
   geom_point(aes(color = Event_short),size =4)+
   geom_errorbar(aes(xmin = PC_Exp_2-PC_Exp_2_se, xmax = PC_Exp_2+PC_Exp_2_se))+
   geom_errorbar(aes(ymin = VI-VI_se, ymax=VI+VI_se))+
@@ -242,17 +243,17 @@ PC2_vol
 ggsave(filename = "PC2_vol.png", plot = PC2_vol, dpi = 300)
   
 
-PC2_VI_model <- lm(VI~PC_Exp_2, opt1_full_summary)
+PC2_VI_model <- lm(VI~PC_Exp_2, opt1_full_summary_lb)
 summary(PC2_VI_model)
 
 
 library(plotly)
-plot_ly(opt1_full_summary, x = ~PC_Exp_1, y = ~PC_Exp_2, z = ~VI, color = ~Event_short, error_y = ~list(array = sd,color = '#000000'))
+plot_ly(opt1_full_summary_lb, x = ~PC_Exp_1, y = ~PC_Exp_2, z = ~VI, color = ~Event_short, error_y = ~list(array = sd,color = '#000000'))
 #add error bars
 
 ### another visualization option
 
-ggplot(opt1_full_summary, aes(x=PC_Exp_1,y=PC_Exp_2,group = VI, color = VI))+
+ggplot(opt1_full_summary_lb, aes(x=PC_Exp_1,y=PC_Exp_2,group = VI, color = VI))+
   geom_line()+
   geom_point()+
   geom_errorbar(aes(xmin = PC_Exp_1-PC_Exp_1_se, xmax = PC_Exp_1+PC_Exp_1_se))+
@@ -261,7 +262,7 @@ ggplot(opt1_full_summary, aes(x=PC_Exp_1,y=PC_Exp_2,group = VI, color = VI))+
 ###another
 library(latticeExtra)
 
-cloud(PC_Exp_1~PC_Exp_2+VI, opt1_full_summary, panel.3d.cloud=panel.3dbars, col.facet='grey', 
+cloud(PC_Exp_1~PC_Exp_2+VI, opt1_full_summary_lb, panel.3d.cloud=panel.3dbars, col.facet='grey', 
       xbase=0.4, ybase=0.4, scales=list(arrows=FALSE, col=1), 
       par.settings = list(axis.line = list(col = "transparent")))
 
@@ -269,16 +270,16 @@ cloud(PC_Exp_1~PC_Exp_2+VI, opt1_full_summary, panel.3d.cloud=panel.3dbars, col.
 install.packages("plot3D")
 library("plot3D")
 
-x <- opt1_full_summary$PC_Exp_1
-y <- opt1_full_summary$PC_Exp_2
-z <- opt1_full_summary$VI
+x <- opt1_full_summary_lb$PC_Exp_1
+y <- opt1_full_summary_lb$PC_Exp_2
+z <- opt1_full_summary_lb$VI
 #simple graph
 
 scatter3D(x,y,z)
 
 ##create CI matrix
-z_min <- (((opt1_full_summary$VI)-(opt1_full_summary$VI_se)))
-z_max <- (((opt1_full_summary$VI)+(opt1_full_summary$VI_se)))
+z_min <- (((opt1_full_summary_lb$VI)-(opt1_full_summary_lb$VI_se)))
+z_max <- (((opt1_full_summary_lb$VI)+(opt1_full_summary_lb$VI_se)))
 CI <- list(z = matrix(c(z_min,z_max), ncol =2))
 CI$z
 
@@ -302,7 +303,7 @@ tiff('3d_plot.tiff', units="in", width=5, height=4, res=300, compression = 'lzw'
 
 dev.off()
 
-text3D(x,y,z, labels = opt1_full_summary$Event_short,add = TRUE, colkey = TRUE, cex = 1)
+text3D(x,y,z, labels = opt1_full_summary_lb$Event_short,add = TRUE, colkey = TRUE, cex = 1)
 
 threeD_p
 #####Compare to photosynthetic efficiency########
