@@ -58,7 +58,7 @@ Volume_long$cm3 <- Volume_long$Volume/1000
 
 
 ht_full <- ggplot(Height_long, aes(x = Days, y = meters))+
-  geom_point(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE, size = 0.75)+
   xlab("Days since planting")+
   ylab("Height (m)")
 
@@ -67,7 +67,7 @@ ht_full
 ggsave("2022_growth&inventory_analylsis/growth_graph/ht_timeline.png", plot = ht_full, width = 6, height = 3, units = "in", dpi = 300)
 
 d_full <- ggplot(Diam_long, aes(x = Days, y = Diameter))+
-  geom_point(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE, size = 0.75)+
   xlab("days since planting")+
   ylab("Diameter (mm)")
 
@@ -77,7 +77,7 @@ ggsave("2022_growth&inventory_analylsis/growth_graph/d_full.png", plot = d_full,
 
 
 vol_full <- ggplot(Volume_long, aes(x = Days, y = (cm3)))+
-  geom_point(aes(color = event_short), show.legend = FALSE)+
+  geom_point(aes(color = event_short), show.legend = FALSE, size = 0.75)+
   xlab("days since planting")+
   ylab("Volume (cubic cm)")
 
@@ -110,17 +110,17 @@ Height_long_III_summary <- Height_long_III %>% dplyr::summarise(
 )
 
 ht_full_event <- ggplot(Height_long_III_summary, aes(x = Days, y = height))+
-  geom_point(aes(color = event_short), show.legend = TRUE)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("Height (m)")
 #large block
 ht_full_event_lb <- ggplot(subset(Height_long_II_summary, block == "large"), aes(x = Days, y = height))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("height (m)")
 ##small block
 ht_full_event_sb <- ggplot(subset(Height_long_II_summary, block == "small"), aes(x = Days, y = height))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("height (m)")
 
@@ -158,18 +158,18 @@ diam_long_III_summary <- diam_long_III %>% dplyr::summarise(
 
 #all
 Diam_full_event <- ggplot(diam_long_III_summary, aes(x = Days, y = diam))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("diameter (mm)")
 
 #large block
 Diam_full_event_lb <- ggplot(subset(diam_long_II_summary, block == "large"), aes(x = Days, y = diam))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("diameter (mm)")
 ##small block
 Diam_full_event_sb <- ggplot(subset(diam_long_II_summary, block == "small"), aes(x = Days, y = diam))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("diameter (mm)")
 
@@ -202,20 +202,20 @@ volume_long_III_summary <- volume_long_III %>% dplyr::summarise(
 
 
 vol_full_event <- ggplot(volume_long_III_summary, aes(x = Days, y = vol))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("Volume index (cubic cm)")
 
 #large block
 vol_full_event_lb <- ggplot(subset(volume_long_II_summary, block == "large"), aes(x = Days, y = vol))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("Volume index (cubic cm)")
 
 #small block
 
 vol_full_event_sb <- ggplot(subset(volume_long_II_summary, block == "small"), aes(x = Days, y = vol))+
-  geom_jitter(aes(color = event_short), show.legend = TRUE, width = 3)+
+  geom_point(aes(color = event_short), show.legend = TRUE, size = 0.75)+
   xlab("Days since planting")+
   ylab("Volume index (cubic cm)")
 

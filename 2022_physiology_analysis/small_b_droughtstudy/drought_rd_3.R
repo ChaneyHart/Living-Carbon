@@ -11,12 +11,12 @@ library(dplyr)
 #round 1
 
 #Diurnal curves (8_15_22)
-dat_rd3 <- read.csv("small_b_droughtstudy/round3/SB_rd3_li600/9_19_sb_600_proc.csv", header = TRUE)
+dat_rd3 <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round3/SB_rd3_li600/9_19_sb_600_proc.csv", header = TRUE)
 dat_rd3 <- subset(dat_rd3, select = c(Time,ID,gsw,VPDleaf,PhiPS2,ETR,Tleaf,Qamb))
 
 #import meta data w/ event, construct...etc
-dat_meta <- read.csv("DBH_H_timeline_CT1_excluded_9_22.csv")
-dat_meta <- subset(dat_meta, select = c(row,column,ID,event_short, construct, construct2,block,H419))
+dat_meta <- read.csv("2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
+dat_meta <- subset(dat_meta, select = c(row,column,ID,event_short, construct, construct2,block,H421))
 #match id to metadata
 dat_rd3 <- inner_join(dat_rd3, dat_meta, by = "ID")
 
@@ -24,7 +24,7 @@ dat_rd3 <- inner_join(dat_rd3, dat_meta, by = "ID")
 
 #summarize means by construct 
 rd3_construct_df <- as.data.frame(aggregate(gsw ~ construct2, dat_rd3, mean))
-write.csv(rd3_construct_df, file = "small_b_droughtstudy/round3/rd3_construct_means.csv")
+write.csv(rd3_construct_df, file = "2022_physiology_analysis/small_b_droughtstudy/round3/rd3_construct_means.csv")
 #graph
 rd_3_construct_plot <- ggplot(dat_rd3, aes(x = construct2, y = gsw, fill = construct2))+
   geom_boxplot()+
@@ -33,7 +33,7 @@ rd_3_construct_plot <- ggplot(dat_rd3, aes(x = construct2, y = gsw, fill = const
   theme(legend.position = "None")
 
 rd_3_construct_plot
-ggsave(filename = "small_b_droughtstudy/round3/rd_3_construct_plot.png", plot = rd_3_construct_plot, width = 3, height = 3, units = "in",dpi = 300)
+ggsave(filename = "2022_physiology_analysis/small_b_droughtstudy/round3/rd_3_construct_plot.png", plot = rd_3_construct_plot, width = 3, height = 3, units = "in",dpi = 300)
 
 lm_rd3_gsw_12 <- lm(gsw~construct2, dat_rd3)
 anova(lm_rd3_gsw_12)
@@ -131,7 +131,7 @@ ggsave(filename = "small_b_droughtstudy/round3/rd_3_fvfm_construct_plot.png", pl
 
 #########assimilation data #####################
 
-assimilation_dat <- read.csv("small_b_droughtstudy/round3/Drought_assimilation_rd3_proc.csv")
+assimilation_dat <- read.csv("2022_physiology_analysis/small_b_droughtstudy/round3/Drought_assimilation_rd3_proc.csv")
 assimilation_dat <- subset(assimilation_dat, select = c(ID,A,Ci,gsw,VPDleaf,PhiPS2,ETR,PhiCO2,Tleaf,Qamb_out))
 assimilation_dat <- inner_join(assimilation_dat, dat_meta, by="ID")
 
@@ -143,7 +143,52 @@ rd3_assim_plot <- ggplot(assimilation_dat, aes(x=construct2, y=A, fill = constru
   geom_signif(comparisons = list(c("control","transgenic")),map_signif_level=TRUE, y_position = 23)+
   theme(legend.position = "None")
 
-ggsave(filename = "small_b_droughtstudy/round3/rd3_assim_plot.png", plot = rd3_assim_plot, width = 3, height = 3, units = "in", dpi=300)
+rd3_assim_plot
+ggsave(filename = "2022_physiology_analysis/small_b_droughtstudy/round3/rd3_assim_plot.png", plot = rd3_assim_plot, width = 3, height = 3, units = "in", dpi=300)
+
+rd3_assim_plot_event <- ggplot(assimilation_dat, aes(x=event_short, y=A, fill = construct2))+
+  geom_boxplot()+
+  xlab("Event")+
+  ylab("Assimilation (µmol/m^2*s)")+
+  theme(legend.position = "None")+
+  theme(axis.text.x = element_text(angle = 45))
+
+rd3_assim_plot_event
+
+ggsave(filename = "2022_physiology_analysis/small_b_droughtstudy/round3/rd3_assim_plot_event.png", plot = rd3_assim_plot_event, width = 5, height = 5, units = "in", dpi=300)
+
+##stats on assimilation###
+
+# Additional libraries
+library(emmeans)
+library(nlme)
+library(lme4)
+
+unique(assimilation_dat$event_short)
+
+# Combine 16-20 and 8-9D
+assimilation_dat$event2 <- assimilation_dat$event_short
+assimilation_dat$event2[assimilation_dat$event_short == "16-20" |
+                assimilation_dat$event_short == "8-9D"] <- "escape"
+
+
+
+######### Effect of event (escapes pooled) ######
+assim_mod2 <- lm(A ~ event2, data = assimilation_dat)
+summary(assim_mod2)
+
+# Residual and qq plots
+plot(fitted(assim_mod2), residuals(assim_mod2), xlab="Fitted Values",
+     ylab="Studentized Residuals",
+     main="Fitted vs. Residuals"); abline(h=0)
+qqnorm(residuals(assim_mod2)); qqline(residuals(assim_mod2))
+#looks pretty good
+
+emmeans(assim_mod2, specs = pairwise ~event2)
+
+#Effect size
+mean(assimilation_dat$A)
+
 
 
 rd3_A_gsw <- ggplot(assimilation_dat, aes(x=gsw, y=A))+
@@ -152,7 +197,8 @@ rd3_A_gsw <- ggplot(assimilation_dat, aes(x=gsw, y=A))+
   ylab("Assimilation (µmol/m^2*s)")+
   geom_smooth(method = "lm")
 
-ggsave(filename = "rd3_A_gsw.png", plot = rd3_A_gsw, width = 4, height = 4, units = "in", dpi = 300)  
+rd3_A_gsw
+ggsave(filename = "2022_physiology_analysis/small_b_droughtstudy/round3/rd3_A_gsw.png", plot = rd3_A_gsw, width = 4, height = 4, units = "in", dpi = 300)  
 
 A_gsw_model <- lm(A~gsw, assimilation_dat)
 summary(A_gsw_model)
