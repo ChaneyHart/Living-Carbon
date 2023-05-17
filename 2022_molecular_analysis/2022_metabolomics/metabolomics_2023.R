@@ -12,8 +12,10 @@ library(ggbiplot)
 
 metabolomics <- read.csv(file = "2022_molecular_analysis/2022_metabolomics/metabolomics_final_raw.csv")
 str(metabolomics)
+metabolomics$ribitol..IS. <- as.numeric(metabolomics$ribitol..IS.)
 growth <- read.csv(file = "2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 metabolomics_II <- inner_join(metabolomics, growth, by = "ID")
+
 
 #gene expression data by tree
 #gene expression data from both years
@@ -43,7 +45,7 @@ glycolate_event <- ggplot(metabolomics_III, aes(x=event_short, y = glycolic.acid
 glycolate_event
 ggsave(filename = "glycolate_event.png", plot = glycolate_event, dpi = 300)
 
-###statisitcs for glycolate#####
+###statistics for glycolate#####
 
 ##event comparison###
 
@@ -104,119 +106,138 @@ ggplot(metabolomics_IV, aes(x=V419, y=glycolic.acid))+
 
 ####PCA of metabolites ########
 
-#PCA_set <- metabolomics_II[,2:74]
+##part of purpose is to explore feature reduction
+
+PCA_metabolites_set <- metabolomics_III[,c(3:67,73)]
+write.csv(PCA_metabolites_set,file = "Metabolites_raw_event.csv")
+#only looking at metabolites that were real numbers for all data
+#should ask Connor or Jeff if NAs can be interpreted as 0s
+PCA_metabolites_set <- PCA_metabolites_set %>%
+  select_if(~ !any(is.na(.)))
 
 
-PCA_set <- na.omit(metabolomics)
-PCA_set <- PCA_set[,3:67]
+PCA_metabolites <- prcomp(PCA_metabolites_set[,c(1:53)], center = TRUE, scale. = TRUE, print = TRUE)
 
-PCA_metabolomics <- prcomp(PCA_set, center = TRUE, scale. = TRUE)
+
+#which PCs are most important?
+ggscreeplot(PCA_metabolites)
+
+ggbiplot(PCA_metabolites)
+#The main distinguisher is that some trees seem to have less of everything
+#sucrose is set off to the side as well
+ggbiplot(PCA_metabolites, choices = c(1,3))
+ggbiplot(PCA_metabolites, choices = c(1,4))
+ggbiplot(PCA_metabolites, choices = c(2,3))
+ggbiplot(PCA_metabolites, choices = c(2,4))
+
+##how do different events compare in PC1 versus PC2 space
+ggbiplot(PCA_metabolites,obs.scale = 1, var.axes = FALSE, var.scale = 1, labels.size = 2, varname.size = 3, ellipse = TRUE, groups = PCA_metabolites_set$event_short )+
+  ggtitle("Principal components of poplar leaf metabolome")+
+  theme_minimal()+
+  theme(legend.position = "bottom")+
+  xlab ("PC1 (42.1%)") + ylab ("PC2 (9.4%)")+
+  geom_point(aes(colour= PCA_metabolites_set$event_short), size = 1)
+
+ggsave(filename = "2022_molecular_analysis/2022_metabolomics/metabolite_PCA.png")
+#no one event is clustered away from the rest. 
+
+
+
+
+##assign event level mean and se of PC1 and PC2
+metabolites_PCA_score <- as.data.frame(PCA_metabolites$x)
+
+metabolites_PCA_score$ID <- PCA_metabolites_set$ID
+metabolites_PCA_score$event_short <- PCA_metabolites_set$event_short
+
+metabolites_PCA_score_event <- metabolites_PCA_score %>% group_by(event_short)
+
+metabolites_event_summary <- metabolites_PCA_score_event %>% dplyr::summarise(
+  n = n(),
+  PC_Exp_1_sd = sd(PC1),
+  PC_Exp_1 = mean(PC1),
+  PC_Exp_1_se = (PC_Exp_1_sd/(sqrt(n))),
+  PC_Exp_2_sd = sd(PC2),
+  PC_Exp_2 = mean(PC2),
+  PC_Exp_2_se = (PC_Exp_2_sd/(sqrt(n))))
+
+
+PCA_rotations <- as.data.frame(PCA_metabolites$rotation)
+
+
+
+#at individual tree level looking at metabolites and gene expression
+
+PCA_set <- na.omit(metabolomics_III)
+
+PCA_set_all <- PCA_set[,c(3:67,100,120,121,122)]
+
+PCA_metabolomics <- prcomp(PCA_set_all, center = TRUE, scale. = TRUE)
 
 ggbiplot(PCA_metabolomics)
 
+##Plot with ellipses around events
 
+ggbiplot(PCA_metabolomics, obs.scale = 1, var.scale = 1, labels.size = 2, varname.size = 3, ellipse = TRUE, groups = PCA_set$event_short)+
+  ggtitle("PCA of molecular traits by event")+
+  theme_minimal()+
+  theme(legend.position = "bottom")+
+  xlab ("PC1 (34.4%)") + ylab ("PC2 (11.4%)")+
+  geom_point(aes(colour= PCA_set$event_short), size = 1)
+
+
+PCA_set_transgenic <- subset(PCA_set, event_short == "13-15B" | event_short == "13-15E" | event_short == "1C" | event_short == "5A" | event_short == "2H" | event_short == "5C" | event_short == "4A" | event_short == "7")
+
+PCA_set_transgenic_id <- PCA_set_transgenic[,c(68:73)]
+
+PCA_set_transgenic <- PCA_set_transgenic[,c(3:67,100,120,121,122)]
+
+PCA_metabolomics_transgenic <- prcomp(PCA_set_transgenic, center = TRUE, scale. = TRUE)
+
+ggbiplot(PCA_metabolomics_transgenic)
+ggbiplot(PCA_metabolomics_transgenic, obs.scale = 1, var.scale = 1, labels.size = 2, varname.size = 3, ellipse = TRUE, groups = PCA_set_transgenic_id$event_short)+
+  ggtitle("PCA of molecular traits by event")+
+  theme_minimal()+
+  theme(legend.position = "bottom")+
+  xlab ("PC1 (31.7%)") + ylab ("PC2 (13.9%)")+
+  geom_point(aes(colour= PCA_set_transgenic_id$event_short), size = 1)
+
+
+####event level comparison between transgenics
+
+PCA_set_event <- PCA_set[,c(3:67,73,100,121,122)]
+
+PCA_set_event <- PCA_set_event %>% group_by(event_short)
+#remove controls and events with sample size less than 2
+
+
+PCA_event_summary <- dplyr::summarise_all(PCA_set_event, list(mean =mean,n = length,sd = sd))
+#remove controls and events with sample size less than 2
+PCA_event_summary_transgenic <- PCA_event_summary[c(-1,-3,-10,-11),] 
+
+PCA_metabolomics_event <- prcomp(PCA_event_summary_transgenic[,-1], center = TRUE, scale. = TRUE)
+
+ggbiplot(PCA_metabolomics_event)
+
+ggbiplot(PCA_metabolomics_event, obs.scale = 20, var.scale = 14, labels.size = 2, varname.size = 3, ellipse = TRUE, groups = PCA_event_summary_transgenic$event_short)+
+  ggtitle("PCA of molecular traits by event")+
+  theme_minimal()+
+  theme(legend.position = "bottom")+
+  xlab ("PC1 (50.5%)") + ylab ("PC2 (16.2%)")+
+  geom_point(aes(colour= PCA_event_summary_transgenic$event_short), size = 1)
+
+
+
+
+
+#looking at metabolites that were significantly different between transgenic and control
 PCA_set_II <- metabolomics[,c(14,43,50,36,55,67,48,38,15,53,21,35,8,4)]
 PCA_labels <- metabolomics_II[,c(1,14,43,50,36,55,67,48,38,15,53,21,35,8,4,71,72)]
 PCA_set_II <- na.omit(PCA_set_II)
 PCA_labels <- na.omit(PCA_labels)
 
 PCA_metabolomics_II <- prcomp(PCA_set_II, center = TRUE, scale. = TRUE)
-ggbiplot(PCA_metabolomics_II, ellipse =TRUE, labels = rownames(PCA_labels), groups = PCA_labels$event_short)
-
-
-ggbiplot(PCA_tree2, choices = c(2,3),obs.scale = 1,var.scale = 1,ellipse = TRUE, labels=rownames(transgene_by_tree), groups = transgene_by_tree$Event_short)+
-  ggtitle("PCA of field gene expression by event")+
-  theme_minimal()+
-  theme(legend.position = "bottom")
-
-phys <- read.csv("../LC_June2022/Li6800_data/Aci_parameters_list.csv")
-
-growth <- read.csv("../LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
-
-str(metabolomics)
-metabolomics_II <- inner_join(metabolomics, growth, by = "ID")
-
-metabolomics_III <- inner_join(metabolomics_II, by_tree, by = "ID")
-
-##looking at data, expected relationships
-ggplot(metabolomics_III, aes(x=event_short, y = glycolic.acid))+
-  geom_boxplot()
-
-ggplot(metabolomics_III, aes(x=event_short, y = glyceric.acid))+
-  geom_boxplot()
-
-ggplot(metabolomics_III, aes(x=event_short, y = L.serine))+
-  geom_boxplot()
-
-ggplot(metabolomics_III, aes(x=event_short, y = D.malic.acid))+
-  geom_boxplot()
-
-ggplot(metabolomics_III, aes(x=event_short, y = glycine))+
-  geom_boxplot()
-
-
-##########
+ggbiplot(PCA_metabolomics_II, ellipse =TRUE, groups = PCA_labels$event_short)
 
 
 
-phys$ID <- phys$tree
-physII <- read.csv("../LC_June2022/Li6800_data/Aci_parameters_list_flr.csv")
-physII$ID <- physII$tree
-growth <- read.csv("../LC_Nov_22_update/DBH_H_timeline_CT1_excluded_9_22.csv")
-
-phys <- left_join(phys, growth, by = "ID")
-physII <- left_join(physII, growth, by = "ID")
-
-#find event means for phys and then growth variables
-phys_event <- phys %>% group_by(event)
-phys_summary <- phys_event %>% dplyr::summarise(
-  n = n(),
-  Ci_sd = sd(Ci_A_410),
-  Ci = mean(Ci_A_410),
-  Ci_se = (Ci_sd/n),
-  Amax_sd = sd(A_A_410),
-  Amax = mean(A_A_410),
-  Amax_se = (Amax_sd/n),
-  Vcmax_sd = sd(Vcmax),
-  Vcmax = mean(Vcmax),
-  Vcmax_se = (Vcmax_sd/n),
-  Jmax_sd = sd(Jmax),
-  Jmax = mean(Jmax),
-  Jmax_se = (Jmax_sd/n),
-  Jmax_Vcmax_ratio_sd = sd(Jmax_Vcmax_ratio),
-  Jmax_Vcmax = mean(Jmax_Vcmax_ratio),
-  Jmax_Vcmax_ratio_se = (Jmax_Vcmax_ratio_sd/n),
-  Rd_sd = sd(Rd),
-  Rd = mean(Rd),
-  Rd_se = (Rd_sd/n)
-)
-
-phys_event_II <- physII %>% group_by(event)
-
-
-physII_summary <- phys_event_II %>% dplyr::summarise(
-  n = n(),
-  PhiPS2_PhiCO2_sd = sd(PhiPS2_PhiCO2_A_410),
-  PhiPS2_PhiCO2 = mean(PhiPS2_PhiCO2_A_410),
-  PhiPS2_PhiCO2_se = (PhiPS2_PhiCO2_sd/n)
-)
-
-phys_summary_III <- inner_join(phys_summary, physII_summary, by = "event")
-
-growth_event <- growth %>% group_by(event)
-
-growth_summary <- growth_event %>% dplyr::summarize(
-  n = n(),
-  VI_sd = sd(V419),
-  VI = mean(V419),
-  VI_se = (VI_sd/n),
-  Chl_sd = sd(Aug_SPAD),
-  Chl = mean(Aug_SPAD),
-  Chl_se = (Chl_sd/n)
-)
-
-#join datasets of event means
-
-growth_phys_summary <- inner_join(phys_summary_III, growth_summary, by = "event")
-
-metabolomics_summary <- inner_join(metabolomics, growth_phys_summary, )
