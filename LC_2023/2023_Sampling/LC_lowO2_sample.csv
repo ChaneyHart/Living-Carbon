@@ -1,0 +1,17 @@
+"","row","column","ID","event","event_short","block","H497","method","treatment"
+"1",3,26,"LCOR-605","LC-102 13-15E","13-15E","large",3063.24,NA,NA
+"2",13,4,"LCOR-107","LC-102 16-20","16-20","large",3230.88,NA,NA
+"3",13,45,"LCOR-461","LC-102 2H","2H","small",3261.36,NA,NA
+"4",6,21,"LCOR-012","LC-102 4A","4A","large",3901.44,NA,NA
+"5",12,12,"LCOR-241","LC-102 5A","5A","large",3688.08,NA,NA
+"6",11,12,"LCOR-035","LC-102 5C","5C","large",3718.56,NA,NA
+"7",6,47,"LCOR-419","LC-102 8-9D","8-9D","small",3291.84,NA,NA
+"8",15,10,"LCOR-203","CT717 3","CT3","large",3474.72,NA,NA
+"9",10,13,"LCOR-077","LC-102 13-15E","13-15E","large",3992.88,"Li-600/MiniPAM","control"
+"10",9,6,"LCOR-310","LC-102 16-20","16-20","large",2895.6,"Li-600/MiniPAM","control"
+"11",13,12,"LCOR-218","LC-102 2H","2H","large",3352.8,"Li-600/MiniPAM","control"
+"12",9,11,"LCOR-233","LC-102 4A","4A","large",3596.64,"Li-600/MiniPAM","control"
+"13",10,11,"LCOR-161","LC-102 5A","5A","large",3444.24,"Li-600/MiniPAM","control"
+"14",15,9,"LCOR-041","LC-102 5C","5C","large",3733.8,"Li-600/MiniPAM","control"
+"15",13,11,"LCOR-289","LC-102 8-9D","8-9D","large",3931.92,"Li-600/MiniPAM","control"
+"16",9,5,"LCOR-346","CT717 3","CT3","large",3840.48,"Li-600/MiniPAM","control"

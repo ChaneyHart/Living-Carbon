@@ -1,0 +1,59 @@
+"OPEN 6.3.4"
+"Wed Aug 16 2023 11:32:27"
+<open><version>"6.3.4"</version></open>
+<open><configfile>"/User/Configs/UserPrefs/FactoryDefault_6.3.xml"</configfile></open>
+<open><light><source>"6400-40 Fluorometer"</source><par_in>1<sensor>"LCF-0388"<cal>-2.61<actinity>1.00</actinity><transm>1.00</transm></cal></sensor><transm>1</transm></par_in><par_out>1<sensor>"Q33287"<cal>6.06</cal></sensor></par_out></light></open>
+<open><comps><file>"/User/Configs/Comps/StdComps_6.3"<header>""</header><extras></extras></file><energybal>no<f_parIn>1</f_parIn><f_parOut>0</f_parOut><alphaK>0.16</alphaK></energybal><bc_total>2.840<stomatal_ratio>1</stomatal_ratio><bc_oneside>1.420<type>2</type><table>"/Sys/Lib/StdBLCTable"</table><area>6</area><slope>-0.219565</slope><offset>2.73739</offset><fan>5</fan></bc_oneside></bc_total></comps></open>
+<open><prompts><onlog>off</onlog><items>"Default (none)"</items></prompts></open>
+<open><constants><oxygen>21 %</oxygen><bb_vapor>1.5</bb_vapor><bb_oxy>0.9</bb_oxy></constants></open>
+<open><stability><items>"Std Stability"<items[1]><id>-2</id><size>15</size><pcv><onoff>0</onoff><value>1</value></pcv><std><onoff>0</onoff><value>1</value></std><slp><onoff>1</onoff><value>1</value></slp></items[1]><items[2]><id>-5</id><size>15</size><pcv><onoff>0</onoff><value>1</value></pcv><std><onoff>0</onoff><value>1</value></std><slp><onoff>1</onoff><value>1</value></slp></items[2]><items[3]><id>-7</id><size>15</size><pcv><onoff>0</onoff><value>1</value></pcv><std><onoff>0</onoff><value>1</value></std><slp><onoff>1</onoff><value>1</value></slp></items[3]></items></stability></open>
+<open><log><format>"StdLogFmt_6.3"<items>{ -35 -21 -36 -76 30 23 36 21 25 221 -33 111 -34 11 -9 -10 -8 -1 -2 -4 -5 -14 -15 -7 -12 -13 -11 -65 -66 -117 -119 -116 -118 -72 -18 -19 -77 -78 -79 -23  }<hdr>{  }</hdr></items></format><options><beep>on</beep><match>"never"<time>30</time><co2>100</co2><delta>10</delta></match><hdr>normal</hdr><rem>normal</rem><stab>no</stab><stats>no<mean>no</mean><file>no</file><period>15</period></stats><excel>yes</excel><controls>yes</controls><comm>no</comm></options><datafile>"/User/ch-metab-8-16"</datafile><button><action>"Normal Log"<code>" LogOneObsManual "</code></action></button><autoprog>"/User/Configs/AutoProgs/AutoLog2"<active>no</active></autoprog></log></open>
+<open><a2d><avgtime>4.0 secs</avgtime><userchans><ch20>"Not available"</ch20><ch21>"Off"</ch21><ch22>"Off"</ch22><ch23>"Not available"</ch23></userchans></a2d></open>
+<open><matching><type>0</type><disp>'a'</disp><settings>><CO2Limit>10.0</CO2Limit><H2OLimit>1.0</H2OLimit><MaxAutoTime>60</MaxAutoTime><AverageTime>10</AverageTime></settings></matching></open>
+<FlrSettings><version>"6.3.4"</version><Label>""</Label><Measure><intensity>5</intensity><rate>3</rate><filter>1</filter><gain>1</gain></Measure><Flash><type>Rectangular</type><ramp>0 %<phase1>250 ms</phase1><phase2>200 ms</phase2><phase3>200 ms</phase3></ramp><duration>0.5 s</duration><target>10</target><blue></blue><rate>4</rate><filter>6</filter><autosave>no</autosave></Flash><DarkPulse><duration>3 secs</duration><farred>8<pre>1 s</pre><post>1 s</post></farred><rate>2</rate><filter>1</filter><autosave>no</autosave></DarkPulse><Calib><unit>"LCF-0388"</unit><red>-2.66</red><blue>-2.23</blue><zero>-2923</zero></Calib><Constants><red_abs>0</red_abs><blue_abs>0</blue_abs><a_dark>0</a_dark><ps_ratio>0</ps_ratio></Constants><Stats><Period>10</Period></Stats></FlrSettings>
+<li6400><factory><unit>"PSC-1491"</unit><serviced>"14 May 2020"</serviced><fuseaware>0</fuseaware><co2mixer>yes</co2mixer><co2><coeffs>{ 0 0.206129 3.41198e-05 1.34543e-08 -1.40547e-12 1.36277e-16  }</coeffs><dvdt>-4.6</dvdt><xs>{ 0.000273 -0.000877  }</xs></co2><h2o><coeffs>{ 0 0.00571025 2.18076e-06 -2.16171e-12  }</coeffs><dvdt>-2.7</dvdt><xs>{ -0.00388 0.00554  }</xs></h2o><flow>{ 0 0.3769  }</flow><press>{ 89.171 0.00551  }</press></factory></li6400>
+<li6400><user><flow_zero>164.1</flow_zero><irga_zero><co2>47.1 -69.9<at>30.3795</at></co2><h2o>203.1 359.1<at>24.3819</at></h2o></irga_zero><irga_span><co2>{ 0.991981 0.991935  }</co2><h2o>{ 0.997098 1.00218  }</h2o></irga_span><irga_match><co2>{ 0.154733 -1.05489  }</co2><h2o>{ 0.031987 1.43895  }</h2o></irga_match><co2_mixer><pump_mv>4500</pump_mv><ppm>{ 2502.22 1151.56 440.979 263.629 117.202 66.4702 43.0361 38.1177  }</ppm><mv>{ 5000 3000 1500 1000 500 300 200 100  }</mv></co2_mixer><parin_offset>0.315371</parin_offset><led_cal><unit>"unknown"</unit><mv>{ 50 100 1000 3000 5000  }</mv><qntm>{ 3 45 555 1500 2500  }</qntm></led_cal><lcf_cal><unit>"LCF-0388"</unit><red><mv>{ 50 100 200 400 800 1500  }</mv><qntm>{ 42.8887 103.684 237.699 517.331 1085.55 2065.56  }</qntm></red><blue><mv>{ 100 500 1000 2000 3000 4000 5000  }</mv><qntm>{ 4.06547 31.194 56.6668 105.564 147.937 184.948 218.408  }</qntm></blue></lcf_cal></user></li6400>
+"11:32:31 "
+$STARTOFDATA$
+"Obs"	"HHMMSS"	"FTime"	"EBal?"	"Photo"	"Cond"	"Ci"	"Trmmol"	"VpdL"	"CTleaf"	"Area"	"BLC_1"	"StmRat"	"BLCond"	"Tair"	"Tleaf"	"TBlk"	"CO2R"	"CO2S"	"H2OR"	"H2OS"	"RH_R"	"RH_S"	"Flow"	"PARi"	"PARo"	"Press"	"CsMch"	"HsMch"	"CsMchSD"	"HsMchSD"	"CrMchSD"	"HrMchSD"	"StableF"	"BLCslope"	"BLCoffst"	"f_parin"	"f_parout"	"alphaK"	"Status"
+1	"11:32:33"	23.5	0	-0.537	-0.0135	333	-0.316	2.25	34.02	6	1.42	1	2.84	32.81	34.02	32.83	409.10	409.90	31.110	30.742	62.83	62.09	499.9	1059	921	100.9	-1.05	1.44	0	0	0	0	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"11:36:12 LCF Lamp: ParIn -> 1150 uml, with blue = 10 percent, actinic on"
+2	"11:38:46"	396.5	0	2.21	0.011	76.2	0.252	2.21	33.97	6	1.42	1	2.84	33.19	33.97	33.27	409.21	406.43	30.655	30.947	60.61	61.19	499.9	1151	1295	100.9	-1.05	1.44	0	0	0	0	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+3	"11:45:44"	815.5	0	0.457	-0.00744	489	-0.2	2.58	35.45	6	1.42	1	2.84	33.99	35.45	34.07	410.66	410.21	31.999	31.767	60.49	60.05	499.9	1149	721	100.9	-1.05	1.44	0	0	0	0	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"11:49:14 LCF Lamp: ParIn -> 980 uml, with blue = 10 percent, actinic on"
+4	"11:51:35"	1167.0	0	3.08	0.0283	219	0.571	1.97	33.92	6	1.42	1	2.84	34.40	33.92	34.56	409.21	405.23	32.527	33.189	60.09	61.31	500.0	979	1259	100.9	-1.05	1.44	0	0	0	0	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"11:54:36 LCF Lamp: ParIn -> 1170 uml, with blue = 10 percent, actinic on"
+5	"11:57:16"	1508.0	0	3.24	0.0119	-40	0.233	1.9	34.91	6	1.42	1	2.84	34.68	34.91	34.82	409.27	405.26	36.634	36.903	66.62	67.11	499.8	1170	504	100.9	-1.05	1.44	0	0	0	0	0.3	-0.22	2.74	1.00	0.00	0.16	111115
+"11:58:32 Flow: Fixed -> 500 umol/s"
+"12:00:53 Flow: Fixed -> 500 umol/s"
+"12:01:07 LCF Lamp: ParIn -> 1100 uml, with blue = 10 percent, actinic on"
+6	"12:04:19"	1922.0	0	2.45	0.00193	-1.61E+03	0.0398	1.99	35.42	6	1.42	1	2.84	35.05	35.42	35.21	409.76	406.81	37.548	37.594	66.91	66.99	499.9	1101	1405	100.9	-1.74	1.9	0.241	0.0844	0.204	0.0812	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+7	"12:10:43"	2307.0	0	1.6	0.0139	212	0.3	2.09	35.71	6	1.42	1	2.84	35.29	35.71	35.36	409.56	407.49	37.157	37.505	65.30	65.91	499.9	1099	1370	100.9	-1.74	1.9	0.241	0.0844	0.204	0.0812	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"12:14:12 Flow: Fixed -> 500 umol/s"
+"12:14:19 LCF Lamp: ParIn -> 1210 uml, with blue = 10 percent, actinic on"
+8	"12:16:15"	2639.0	0	1.31	0.00961	177	0.269	2.69	37.00	6	1.42	1	2.84	35.96	37.00	36.11	410.22	408.53	35.456	35.768	60.08	60.61	499.9	1209	1003	100.9	-1.74	1.9	0.241	0.0844	0.204	0.0812	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"12:19:59 Flow: Fixed -> 500 umol/s"
+9	"12:19:59"	2862.5	0	0.821	-0.0032	796	-0.074	2.22	35.45	6	1.42	1	2.84	36.26	35.55	36.40	409.61	409.83	34.568	34.583	57.62	57.65	499.9	1209	1464	100.9	-0.384	1.95	0.188	0.0647	0.181	0.0537	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"12:20:15 LCF Lamp: ParIn -> 1250 uml, with blue = 10 percent, actinic on"
+10	"12:22:57"	3040.5	0	0.252	0.0142	361	0.423	2.86	37.34	6	1.42	1	2.84	36.65	37.34	36.81	408.42	407.91	34.769	35.259	56.72	57.52	499.9	1250	984	100.9	-0.384	1.95	0.188	0.0647	0.181	0.0537	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"12:25:21 LCF Lamp: ParIn -> 1140 uml, with blue = 10 percent, actinic on"
+11	"12:28:35"	3378.5	0	2.47	0.0172	162	0.51	2.86	37.82	6	1.42	1	2.84	37.44	37.82	37.65	410.30	407.08	36.427	37.017	56.92	57.85	499.9	1139	1230	100.9	-0.384	1.95	0.188	0.0647	0.181	0.0537	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"12:30:58 LCF Lamp: ParIn -> 1250 uml, with blue = 10 percent, actinic on"
+"12:31:58 Flow: Fixed -> 500 umol/s"
+12	"12:33:19"	3662.0	0	0.31	0.0042	274	0.137	3.13	38.52	6	1.42	1	2.84	37.38	38.52	37.64	410.29	409.85	36.685	36.843	57.49	57.74	499.9	1250	991	100.9	-0.552	1.97	0.0797	0.0352	0.15	0.0641	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+13	"12:43:51"	4295.5	0	-0.683	-0.00432	144	-0.131	2.89	38.71	6	1.42	1	2.84	37.30	38.71	37.52	409.63	410.52	40.037	39.886	63.00	62.77	499.9	1251	1309	100.9	-0.552	1.97	0.0797	0.0352	0.15	0.0641	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"12:47:03 Flow: Fixed -> 500 umol/s"
+14	"12:49:08"	4612.0	0	0.324	0.00209	147	0.0666	3.04	38.96	6	1.42	1	2.84	37.66	38.96	37.88	410.00	409.58	39.253	39.330	60.57	60.69	499.9	1250	1067	100.9	-0.721	1.99	0.0794	0.107	0.0452	0.108	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"12:52:22 LCF Lamp: ParIn -> 1350 uml, with blue = 10 percent, actinic on"
+15	"12:53:37"	4881.5	0	-0.0903	0.000339	803	0.0115	3.23	39.37	6	1.42	1	2.84	38.02	39.37	38.24	409.93	410.03	39.014	39.027	59.05	59.07	499.9	1349	1259	100.9	-0.721	1.99	0.0794	0.107	0.0452	0.108	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+"12:56:24 LCF Lamp: ParIn -> 1270 uml, with blue = 10 percent, actinic on"
+"12:58:20 Flow: Fixed -> 500 umol/s"
+16	"12:58:20"	5162.5	0	1.06	0.00173	-571	0.0584	3.22	39.21	6	1.42	1	2.84	38.30	39.30	38.50	408.97	408.97	38.687	38.668	57.68	57.65	499.9	1267	1130	100.9	-0.311	2.05	0.0778	0.0112	0.0162	0.00994	1.0	-0.22	2.74	1.00	0.00	0.16	111115
+17	"13:00:41"	5304.5	0	0.484	0.00685	277	0.232	3.23	39.79	6	1.42	1	2.84	38.72	39.79	38.93	409.89	409.20	40.406	40.672	58.87	59.26	499.9	1269	1123	100.9	-0.311	2.05	0.0778	0.0112	0.0162	0.00994	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+18	"13:00:46"	5309.5	0	0.553	0.00511	219	0.174	3.25	39.81	6	1.42	1	2.84	38.74	39.81	38.95	410.25	409.50	40.396	40.596	58.81	59.10	499.8	1269	1123	100.9	-0.311	2.05	0.0778	0.0112	0.0162	0.00994	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"13:03:35 Flow: Fixed -> 500 umol/s"
+19	"13:07:15"	5698.5	0	-0.262	-0.0351	382	-0.949	2.53	40.40	6	1.42	1	2.84	39.06	40.40	39.23	410.05	410.83	51.115	50.033	73.13	71.58	499.9	1269	1307	100.9	-0.518	2.1	0.106	0.028	0.022	0.0142	0.7	-0.22	2.74	1.00	0.00	0.16	111115
+"13:09:57 LCF Lamp: ParIn -> 1180 uml, with blue = 10 percent, actinic on"
+"13:11:22 Flow: Fixed -> 500 umol/s"
+"13:11:45 Flow: Fixed -> 500 umol/s"
+20	"13:13:25"	6068.0	0	0.24	-0.0803	398	-2.19	2.51	40.16	6	1.42	1	2.84	39.27	40.16	39.51	410.12	410.91	51.774	49.276	73.24	69.71	499.9	1179	1214	100.8	-0.113	2.31	0.192	0.0431	0.0293	0.0322	1.0	-0.22	2.74	1.00	0.00	0.16	111115
