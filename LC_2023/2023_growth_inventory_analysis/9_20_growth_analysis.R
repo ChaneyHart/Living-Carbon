@@ -327,26 +327,36 @@ volume_yearly_summary <- growth %>% group_by(event_short) %>% dplyr::summarise(
   yr3_vol_se = yr3_vol_sd/(sqrt(n))
 )
 
+volume_yearly_summary$construct = c("LC-102","LC-102","LC-102","Escape","LC-102","LC-102","LC-102","LC-102","LC-102","LC-102","LC-102","LC-102","Escape","Control")
+
+myColors <- c('gray2',
+              'cyan4',
+              'red4')
+
+
+names(myColors) <- levels(volume_yearly_summary$construct)
+colorScale <- scale_color_manual(name = "construct",values = myColors)
+
 ## growth year 1
-growth_year1 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr1_vol),y=yr1_vol, color = event_short))+
+growth_year1 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr1_vol),y=yr1_vol, color = construct))+
   geom_point()+
   geom_errorbar(aes(ymin=yr1_vol-(2*yr1_vol_se), ymax=yr1_vol+(2*yr1_vol_se)))
 
-growth_year1
+growth_year1 + colorScale
 
 ##growth year 2
-growth_year2 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr2_vol),y=yr2_vol, color = event_short))+
+growth_year2 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr2_vol),y=yr2_vol, color = construct))+
   geom_point()+
   geom_errorbar(aes(ymin=yr2_vol-(2*yr2_vol_se), ymax=yr2_vol+(2*yr2_vol_se)))
 
-growth_year2
+growth_year2 + colorScale
 
 #growth year 3
-growth_year3 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr3_vol),y=yr3_vol, color = event_short))+
+growth_year3 <- ggplot(volume_yearly_summary, aes(x=reorder(event_short,yr3_vol),y=yr3_vol, color = construct))+
   geom_point()+
   geom_errorbar(aes(ymin=yr3_vol-(2*yr3_vol_se), ymax=yr3_vol+(2*yr3_vol_se)))
 
-growth_year3
+growth_year3 + colorScale
 
 ###############################################################
 # Stats Edit by Sukhyun Joo ############
@@ -544,55 +554,80 @@ plot(fitted(v_mod3), residuals(v_mod3), xlab="Fitted Values",
 qqnorm(residuals(v_mod3)); qqline(residuals(v_mod3))
 
 emmeans(v_mod3, specs = pairwise ~construct)
+summary(v_mod3)
 
-#interpreting the power of this experiment,
-#with our sample size of 25, how big of an effect size could we detect as different from 0?
-#T(25,97.5)*sqrt(2(var))
-
-
-aggregate(growth$V801, by=list(growth$construct), FUN=length)
+#interpreting the power of the construct comparisons
 
 #power in comparing between transgenic and escape?
-
-power_LC102_escape <- subset(growth, construct == "LC-102"|construct =="Escape") %>% summarize(
-  n = n(),
-  var = var(V801),
-  mean = mean(V801)
-)
-
-power_LC102_escape_2 <- subset(growth, construct == "LC-102"|construct =="Escape") %>% group_by(construct) %>% summarize(
+power_LC102_escape <- subset(growth, construct == "LC-102"|construct =="Escape") %>% group_by(construct) %>% summarize(
   n = n(),
   var = var(V801),
   mean = mean(V801),
-  sd = sd(V801)
+  sd = sd(V801),
+  se = sd/sqrt(n),
+  tst = qt(0.975, n-1),
+  lower = mean - tst*se,
+  upper = mean + tst*se
 )
 
-var_within_LC102_escape
+LC102_escape_diff_mean <- (power_LC102_escape[2,4] - power_LC102_escape[1,4])
+LC102_escape_diff_lower <- (power_LC102_escape[2,8] - power_LC102_escape[1,8])
+LC102_escape_diff_upper <- (power_LC102_escape[2,9] - power_LC102_escape[1,9])
+pooled_var_LC_102_escape <- ((power_LC102_escape[1,2]*power_LC102_escape[1,3]) + (power_LC102_escape[2,2]*power_LC102_escape[2,3]))/(power_LC102_escape[1,2]+power_LC102_escape[2,2]-2)
 
-power.anova.test(groups = 2, n= 61, between.var = var(power_LC102_escape_2$mean), within.var = 10914486, sig.level = 0.05)
-sqrt((10914486*2/62))*(qt(0.975,61))
 
-?power.anova.test
-#effect size would have had to be 463.35 cm3 to detect as different from 0. Had the power to detect difference of 463.35 cm3 
+sig_effect_size_LC_102_Escape <- sqrt((pooled_var_LC_102_escape[1,1])*2/62)*(qt(0.975,61))/(mean(c(as.numeric(power_LC102_escape[1,4]),as.numeric(power_LC102_escape[2,4]))))
 
-#power in comparing between transgenic and control?
-power_2 <- subset(growth, construct == "LC-102"|construct =="Control") %>% summarize(
-  n = n(),
-  var = var(V801)
-)
+#we had the power to detect an effect size of 28.8%
 
-sqrt((10708470*2/364))*(qt(0.975,363))
+#What sample size would we have needed with our variation to see an effect size of 10%
 
-#effect size would have had to be 477.0089 cm3 to detect as different from 0. Had the power to detect difference of 477.0089 cm3 
 
+#use this function
+effect_percent <- as.data.frame(c(5,10,15,20,25,30,35,40,45,50))
+sample_calc <- function(df,df2,df3) {
+  av = mean(c(as.numeric(df[1,4]),as.numeric(df[2,4])))
+  effect_5 = (av*(df2[1,1]/100))
+  effect_10 = (av*(df2[2,1]/100))
+  effect_15 = (av*(df2[3,1]/100))
+  effect_20 = (av*(df2[4,1]/100))
+  effect_25 = (av*(df2[5,1]/100))
+  effect_30 = av*(df2[6,1]/100)
+  effect_35 = av*(df2[7,1]/100)
+  effect_40 = av*(df2[8,1]/100)
+  effect_45 = av*(df2[9,1]/100)
+  effect_50 = av*(df2[10,1]/100)
+  n_5 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_5)^2)
+  n_10 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_10)^2)
+  n_15 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_15)^2)
+  n_20 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_20)^2)
+  n_25 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_25)^2)
+  n_30 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_30)^2)
+  n_35 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_35)^2)
+  n_40 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_40)^2)
+  n_45 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_45)^2)
+  n_50 = ((qt(0.975,61)*sqrt(2*(df3[1,1]))/effect_50)^2)
+  effect_size = c(effect_5,effect_10, effect_15, effect_20, effect_25, effect_30, effect_35,effect_40, effect_45, effect_50)
+  sample_size = c(n_5,n_10,n_15,n_20,n_25,n_30,n_35,n_40,n_45,n_50)
+  effect_table_df =data.frame(df2,effect_percent,sample_size)
+  colnames(effect_table_df) = c("percent","effect","n")
+  return(effect_table_df)
+}
+LC102_escape_power_table <- sample_calc(power_LC102_escape, effect_percent,pooled_var_LC_102_escape)
+
+ggplot(subset(LC102_escape_power_table, effect > 10), aes(x=effect, y = n))+
+  geom_point()+
+  geom_line()+
+  xlab("Effect size (%)")+
+  ylab("Sample size needed")+
+  theme_bw()
+  
+
+#Determine what the effect size difference we saw was...
 
 predict_set_v <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","V49","V801"))
 predict_set_v$predicted_V801 <- exp(predict(v_mod3, new_data = predict_set_v, interval = "confidence"))
 
-#check
-ggplot(predict_set_v,aes(x= log(V801), y = log(predicted_V801)))+
-  geom_point()
-mean(predict_set_v$V801)
 
 #average modeled volume
 
@@ -604,6 +639,7 @@ construct_volume_effect <- as.data.frame(c(modelled_control_mean_v, modelled_esc
 
 row.names(construct_volume_effect) <- c("control","escape","transgenic")
 colnames(construct_volume_effect) <- c("volume_index")
+
 
 
 ######### Effect of event (escapes pooled) ######
@@ -689,8 +725,6 @@ colnames(event_diameter_effect) <- c("diameter")
 v_mod4 <- lme(log(V801) ~ V49 + event2, random = ~1|block, data=growth)
 summary(v_mod4)
 
-hist(growth$V801)
-
 plot(fitted(v_mod4), residuals(v_mod4), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
@@ -701,11 +735,6 @@ emmeans(v_mod4, specs = pairwise ~event2)
 #Effect size
 predict_set_v_II <- subset(growth, select = c("ID","event","event_short","construct","construct2","block","V49","V801"))
 predict_set_v_II$predicted_V801 <- exp(predict(v_mod4, new_data = predict_set_v_II, interval = "confidence"))
-
-#check
-ggplot(predict_set_v_II,aes(x= log(V801), y = predicted_V801))+
-  geom_point()
-mean(predict_set_v_II$V801)
 
 
 #average modeled volume
@@ -728,7 +757,46 @@ event_volume_effect <- as.data.frame(c(modelled_CT3_mean_v, modelled_pooled_esca
 row.names(event_volume_effect) <- c("control","escape","5A","5C","5","2H","13_15E","13_15B","4A","4B","1","1C","7")
 colnames(event_volume_effect) <- c("volume")
 
-#With our sampling sizes, what difference in volume were we able to detect as statisatically different from 0?
+#With our sampling sizes, what difference in volume were we able to detect as statistically different from 0?
+
+#power in comparing between 5A and escape?
+
+power_5A_escape <- subset(growth, event2 == "LC-102 5A"|event2 =="escape") %>% group_by(event2) %>% summarize(
+  n = n(),
+  var = var(V801),
+  mean = mean(V801),
+  sd = sd(V801),
+  se = sd/sqrt(n),
+  tst = qt(0.975, n-1),
+  lower = mean - tst*se,
+  upper = mean + tst*se
+)
+
+escape_5A_diff_mean <- (power_5A_escape[1,4] - power_5A_escape[2,4])
+escape_5A_diff_lower <- (power_5A_escape[1,8] - power_5A_escape[2,8])
+escape_5A_diff_upper <- (power_5A_escape[1,9] - power_5A_escape[2,9])
+pooled_var_5A_escape <- ((power_5A_escape[1,2]*power_5A_escape[1,3]) + (power_5A_escape[2,2]*power_5A_escape[2,3]))/(power_5A_escape[1,2]+power_5A_escape[2,2]-2)
+
+
+sig_effect_size_5A_Escape <- sqrt((pooled_var_5A_escape[1,1])*2/34)*(qt(0.975,33))/(mean(c(as.numeric(power_5A_escape[1,4]),as.numeric(power_5A_escape[2,4]))))
+
+#we had the power to detect an effect size of 28.8%
+
+#What sample size would we have needed with our variation to see an effect size of 10%
+
+
+#use this function
+effect_percent <- as.data.frame(c(5,10,15,20,25,30,35,40,45,50))
+
+escape_5A_power_table <- sample_calc(power_5A_escape, effect_percent,pooled_var_5A_escape)
+
+ggplot(subset(escape_5A_power_table, effect > 10), aes(x=effect, y = n))+
+  geom_point()+
+  geom_line()+
+  xlab("Effect size (%)")+
+  ylab("Sample size needed")+
+  theme_bw()
+
 
 #to calculate pooled variance
 power_5A_CT3 <- subset(growth, event_short == "5A"|event_short =="CT3") %>% summarize(
