@@ -1,0 +1,134 @@
+---
+title: "Meeting followup"
+author: "Dusty Gannon, Chaney Hart"
+date: "2023-10-30"
+output:
+  bookdown::word_document2:
+    reference_docx: ../../word_style.docx
+bibliography: ../references.bib
+---
+
+# Non-technical overview
+
+Genes can be inserted into genomes to impart desirable traits using CRISPR technology, however, the ultimate location into which genes are inserted cannot be controlled. The location of a gene insertion can have effects on its expression and the effectiveness of the bio-engineering objective. Therefore, multiple transgenic cells are created, inserting the same gene but in random locations during each transgenic *event*. Organisms (trees in this case), are then grown from single cells and cloned in order to understand both biological variation (variation across events) and technical variation (variation across clones from a given event) in the trait of interest. Additionally, if some events consistently outperform others, these can be propagated clonally for production purposes.
+
+## Study design
+
+Hart et al. have generated transgenic lines in poplar trees from 14 unique transgenic events. From each event, they have created 24 - 30 clones and planted them in an experimental field. The wood volume of the tree is of primary interest, which can be estimated in a number of ways. Alternatively, indices of wood volume can be used to evaluate the efficacy of the transgenic experiment and variation among events. However, there are many additional factors that could affect tree growth and likely vary across the experimental field. Some of these covariates are available to Hart et al. (e.g., gene expression levels from qPCR data), some of which might not (e.g., soil characteristics). 
+
+## Reason for seeking consultation
+
+- Measurements of some metrics of interest (e.g., wood volume and photosynthetic rate) are costly. Experimenters therefore wish to sample approximately 50% of the clones from each event to measure. They therefore seek advice on sampling methods to obtain a representative sample of the variation within an event.
+
+- Hart et al. also wish to generate precise and accurate estimates of differences among events in order to inform future production of wood using transgenic trees. They therefore seek advice on how to select among many potential control variables (included in the model to get better estimates of the effects of interest) while obtaining valid interval estimates and hypothesis tests for the factor of interest (event). 
+
+# Thoughts and considerations
+
+## Sampling clones
+
+We discussed two options for sampling clones within each event in the meeting. I expect both are justifiable, so it ultimately comes down to how important it is to you to guarantee that some of the largest-crown trees are represented in your sample.
+
+### Simple random sampling
+
+Simple random sampling (SRS) is often a good approach when there is little known about the population of interest. This approach provides unbiased sampling of the population, but can "miss" important variation in the population if sample sizes are small relative to the population size and some sub-groups within the population occur at low frequencies.
+
+### Stratified random sampling
+
+When there are known sub-groups within a population of interest, stratified random sampling (StRS) can provide more precise estimates of population parameters of interest for a given sample size compared to SRS. With this approach, the population is divided into known groups such that groups are mutually exclusive (a subject within the population cannot belong to multiple groups). We then take a simple random sample from each group, using a sample size for each group that is proportional to the relative abundance of that group within the population. For example, if I divide my population into two groups, each of which represent a fraction of the total population, $p$ and $1 - p$, (respectively), and my target sample size is $n$, I would want to sample $np$ subjects from the first group and $n(1-p)$ from the second group. The downside to this approach is that we need a lot of information on the population in order to divide it into groups before we even sample from it.
+
+## Performing some simulations
+
+In the meeting, we discussed performing some simulations to assess how well you might represent the population using each approach, on average. Below I show an example of what that could look like:
+
+```{r}
+# load libraries
+  library(tidyverse)
+  library(patchwork)
+
+# first generate some data (akin to tree heights, for example)
+  set.seed(9675)
+  y <- rlnorm(30, meanlog = -2, sdlog = 2)
+  
+  hist(y)
+  
+# take a random sample from this of size 15 and see how 
+  srs <- purrr::map(
+    1:1000,
+    ~ sample(y, size = 15)
+  )
+  
+# take stratified random samples
+  
+  # first group based on natural breaks
+  ## though you can stratify in other ways
+  thresh <- BAMMtools::getJenksBreaks(y, 3)[2]
+  
+  y_small <- y[y <= thresh]
+  y_large <- y[y > thresh]
+  
+  # compute sample sizes for each group
+  n1 <- floor(15 * length(y_small) / length(y))
+  n2 <- 15 - n1
+  
+  # create samples
+  strs <- purrr::map(
+    1:1000,
+    ~ c(
+      sample(y_small, n1),
+      sample(y_large, n2)
+    )
+  )
+  
+# visualize the results
+  pop_mean <- mean(y)
+  pop_sd <- sd(y)
+
+  results <- tibble(
+    method = rep(c("SRS", "StRS"), each = length(srs)),
+    samp_mean = c(
+      map_dbl(srs, mean),
+      map_dbl(strs, mean)
+    ),
+    samp_sd = c(
+      map_dbl(srs, sd),
+      map_dbl(strs, sd)
+    )
+  )  
+  
+  p1 <- ggplot(data = results, aes(x = samp_mean, fill = method)) +
+    geom_density(alpha = 0.6) +
+    geom_vline(xintercept = pop_mean, linetype = "dashed") +
+    theme_classic() +
+    scale_fill_manual(values = PNWColors::pnw_palette("Bay", 2, type = "discrete")) +
+    ggtitle("Distribution of sample means")
+  
+  p2 <- ggplot(data = results, aes(x = samp_sd, fill = method)) +
+    geom_density(alpha = 0.6) +
+    geom_vline(xintercept = pop_sd, linetype = "dashed") +
+    theme_classic() +
+    scale_fill_manual(values = PNWColors::pnw_palette("Bay", 2, type = "discrete")) +
+    ggtitle("Distribution of sample standard deviations")
+  
+  p1 + p2
+
+```
+
+In this case, because of the long tail on the distribution of the population we are sampling and small sample sizes, a stratified random sample can give better resolution on the characteristics of the population because we can be sure that different subsets of the population are represented in the sample.
+
+## Resources for valid post-selection inference
+
+- A good place to start reading up on the issues with reporting results from statistical hypothesis tests after doing model selection is @tredennick_modsel_2021.
+
+- For a more detailed discussion but still with very intuitive explanation, see @taylor_selinf_2015.
+
+- Ultimately, for your case where you have a factor of interest and many potential control variables that are not necessarily of interest beyond helping to explain variation that cannot be attributed to the factor of interest, I would recommend something like *double-selection* proposed by @belloni_inference_2014. The original article [@belloni_inference_2014] gets pretty technical, but there is also a good description of the idea in the documentation for its implementation in STATA [here](https://www.stata.com/manuals/lassolassoinferenceintro.pdf#lassoLassoinferenceintro).
+
+### A phenomenological approach
+
+Another thing to consider is that many of the potential control variables (including those you may not have measured) likely vary in space in the experimental field a way that conforms to [Tobler's First Law of Geography](https://en.wikipedia.org/wiki/Tobler%27s_first_law_of_geography) ("everything is related to everything else, but near things are more related than distant things"). Because of this, you may be able to account for the average effect of these measured and unmeasured control variables by grouping trees into spatial clusters and then including random effects for the clusters. I can follow up with code for doing that later, but let's schedule another meeting to discuss model choice again.
+
+# References
+
+
+
+

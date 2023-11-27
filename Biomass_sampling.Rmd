@@ -1,0 +1,385 @@
+---
+title: "Biomass sampling"
+author: "Chaney Hart"
+date: "2023-11-07"
+output: pdf_document
+---
+
+#### read in data
+```{r setup, include=FALSE}
+library(purrr)
+library(tidyr)
+library(readxl)
+library(fabricatr)
+library(dplyr)
+library(ggplot2)
+
+growth_dat <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/LC_9_20_growth_data_cleaned.csv")
+#growth_dat$Vol_index <- 0.333*((3.14*((growth_dat$DBH/2)^2))*growth_dat$Height)
+
+growth_dat <- growth_dat %>% mutate(tier = case_when(
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "elite",
+  event_short == "13-15E" | event_short == "2H" ~ "poor",
+  event_short == "16-20" | event_short == "8-9D" ~"control", 
+  event_short == "CT3" ~ "WT",
+  event_short == "13-15B" | event_short == "1" | event_short == "1C" | event_short == "7"| event_short == "4B" ~ "unanalyzed"))
+
+growth_dat <- growth_dat %>% mutate(section = case_when(
+  column <= 8 & row <= 8 ~ 1,
+  column <= 8 & row > 8 ~ 2,
+  column > 8 & column <= 16 & row <= 8 ~ 3,
+  column > 8 & column <= 16 & row > 8 ~ 4,
+  column > 16 & column <= 24 & row <= 8 ~5,
+  column > 16 & column <= 24 & row > 8 ~ 6,
+  column > 24 & column <= 28 & row <= 8 ~7,
+  column > 24 & column <= 28 & row > 8 ~8,
+  column > 44 & column <= 50 & row <=8 ~9,
+  column > 44 & column <= 50 & row > 8 ~10,
+  column > 50 & column < 56 & row <= 8 ~ 11,
+  column > 50 & column < 56 & row > 8 ~ 12
+))
+```
+
+### Split trees into terciles based on measured volume index
+
+```{r}
+biomass_set <- growth_dat %>% group_by(event_short) %>% mutate(
+  strata = ntile(V801,3))
+  
+tercile_plot <- ggplot(biomass_set,aes(x=strata,y=V801))+
+  geom_point()
+tercile_plot + theme(plot.margin = unit(c(0.5,0.5,0.5,0.5),"inches"))
+```
+
+
+### We see that the top tercile is much more variable, suggesting that simple random  sampling may not be the most efficient and allocating samples equally to each tercile may not be the most efficient.
+
+#### Allocating samples to each strata 
+
+### number of samples determined by size of strata and variance of each strata
+
+```{r }
+biomass_subset <- subset(biomass_set, event_short == "13-15E" | event_short == "2H" | event_short == "5A" | event_short == "5C" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D" | event_short == "CT3")
+
+# add info about the total number of trees in each event (N)
+biomass_subset <- biomass_subset %>% mutate(N= case_when(
+  event_short == "13-15E"~"32",
+  event_short == "16-20"~"33",
+  event_short == "5A"~"34",
+  event_short == "4A"~"19",
+  event_short == "2H"~ "29",
+  event_short == "5C"~ "33",
+  event_short == "8-9D"~"29",
+  event_short == "CT3"~"34"
+))
+
+biomass_subset$N <- as.numeric(biomass_subset$N)
+#for each event, we want 50% of the tree samples
+biomass_subset$n_final <- biomass_subset$N*0.5
+
+#brute force the denominator of Neyman's allocation formula for each event.
+#this is calculated as the sum of standard deviation times the fractional size of each strata
+biomass_subset <- biomass_subset %>% mutate(denom= case_when(
+  event_short == "13-15E"~1159.79,
+  event_short == "16-20"~1429.84,
+  event_short == "5A"~2860.11,
+  event_short == "4A"~2170.89,
+  event_short == "2H"~ 846.708,
+  event_short == "5C"~ 1461.4,
+  event_short == "8-9D"~1073.33,
+  event_short == "CT3"~724.72
+))
+
+#determine size and variance within each strata of each event. Use this to estimate how samples should be allocated to each strata via Neyman allocation
+#larger and/or more variable strata get more samples
+biomass_summary <- biomass_subset %>% group_by(event_short,strata) %>% summarize(
+  ID = ID,
+  V = V801,
+  n_strata = n(),
+  N = N,
+  w_strata = n_strata/N,
+  sd = sd(V801),
+  n_neymans = (n_final)*((w_strata*sd)/denom),
+  n_equal = n_final/3,
+  n_prop = n_final*w_strata,
+  tier = tier,
+  block = block,
+  construct = construct,
+  construct2 = construct2
+)
+
+print(biomass_summary)
+```
+### The above chunk guides how many samples should be allocated to each strat
+
+#### Monte Carlo simulation of sampling
+
+### Compared simple random sampling with stratified random sampling.
+### In stratified random sampling, allocated snumber of sampled to each strata based on variance in each strata.
+
+```{r}
+library(nlme)
+
+#single event datasets
+
+biomass_5A <- subset(biomass_subset, event_short == "5A")
+biomass_4A <- subset(biomass_subset, event_short == "4A")
+biomass_13_15E <- subset(biomass_subset, event_short == "13-15E")
+biomass_16_20 <- subset(biomass_subset, event_short == "16-20")
+biomass_8_9D <- subset(biomass_subset, event_short == "8-9D")
+biomass_CT3 <- subset(biomass_subset, event_short == "CT3")
+
+
+##################################################################################
+
+#with a dataset for a single event...
+#this function runs the simulation. Takes a random sample and a stratified random sample with the number of samples taken for each strata specified
+#runs this 1000 times
+#compares the estimate of volume index you get from each sample to the observed value we have measured and gives the bias, mean square error and root mean square error from this.
+mcs_biomass <- function(data, colnames=c("ID","strata", "V801"), n,nh, reps=1000) {
+  ## Match up column names
+  colnames <- match(colnames, names(data))
+  ID <-  as.matrix(data[,colnames[1]])	## ID 
+  strata <- as.matrix(data[,colnames[2]])	## Strata
+  Volume <- as.matrix(data[,colnames[3]])	## Volume
+  
+  
+  ## Calculate population values
+  N = length(Volume)
+  SV <- mean(Volume)   ## mean biomass
+  SD <- sd(Volume)
+  
+  ## Create initial values
+  V <- matrix(nrow=reps, ncol=2)
+  B <- double(2) 
+  MSE <- double(2)
+  
+  ## Run Monte Carlo simulation
+  for(i in 1:reps)
+  { 
+    ## SRS
+    samp <- sample(Volume, n) 
+    V[i,1] <- (sum(samp/(n/N)))/N
+    B[1] <- B[1] + (V[i,1] - SV)
+    MSE[1] <- MSE[1] + (V[i,1] - SV)^2
+    
+    ## STRS (neymans)
+    strt <- levels(factor(strata))
+    Nh <- gapply(data.frame(strata), FUN=function(x) nrow(x), form=~strata) #Population total per strata
+    
+    V[i,2] <- 0
+    for(j in 1:length(Nh))
+    {
+      samp <- sample(1:Nh[j], nh[j])
+      V[i,2] <- V[i,2] + (sum((Volume[strata==strt[j]][samp])/(nh[j]/Nh[j])))/N
+    }
+    B[2] <- B[2] + (V[i,2] - SV)
+    MSE[2] <- MSE[2] + (V[i,2] - SV)^2
+  }
+  B <- B/reps
+  MSE <- MSE/reps
+  RMSE <- sqrt(MSE)
+    
+  #create return list
+  lst <- list(n=n, reps=reps,Bias=B, MSE=MSE, RMSE=RMSE, Vhat=V, Vobs=SV)
+  return(lst)
+  
+}
+
+#run simulation for each event of interest
+mc_5A <- mcs_biomass(biomass_5A,n =17,nh=c(3,3,11),reps = 1000)
+mc_4A <- mcs_biomass(biomass_4A,n =17,nh=c(2,2,6),reps = 1000)
+mc_16_20 <- mcs_biomass(biomass_16_20,n =17,nh=c(2,3,11),reps = 1000)
+mc_8_9D <- mcs_biomass(biomass_8_9D,n =17,nh=c(4,2,8),reps = 1000)
+mc_CT3 <- mcs_biomass(biomass_CT3,n =17,nh=c(4,4,9),reps = 1000)
+mc_13_15E <- mcs_biomass(biomass_13_15E,n =17,nh=c(3,3,10),reps = 1000)
+
+#compile results into a dataframe to plot results
+bias_SRS <- as.matrix(list(mc_5A[["Bias"]][1],mc_4A[["Bias"]][1],mc_16_20[["Bias"]][1],mc_8_9D[["Bias"]][1],mc_CT3[["Bias"]][1],mc_13_15E[["Bias"]][1]))
+bias_STRS <- as.matrix(list(mc_5A[["Bias"]][2],mc_4A[["Bias"]][2],mc_16_20[["Bias"]][2],mc_8_9D[["Bias"]][2],mc_CT3[["Bias"]][2],mc_13_15E[["Bias"]][2]))
+MSE_SRS <- as.matrix(list(mc_5A[["MSE"]][1],mc_4A[["MSE"]][1],mc_16_20[["MSE"]][1],mc_8_9D[["MSE"]][1],mc_CT3[["MSE"]][1],mc_13_15E[["MSE"]][1]))
+MSE_STRS <- as.matrix(list(mc_5A[["MSE"]][2],mc_4A[["MSE"]][2],mc_16_20[["MSE"]][2],mc_8_9D[["MSE"]][2],mc_CT3[["MSE"]][2],mc_13_15E[["MSE"]][2]))
+RMSE_SRS <- as.matrix(list(mc_5A[["RMSE"]][1],mc_4A[["RMSE"]][1],mc_16_20[["RMSE"]][1],mc_8_9D[["RMSE"]][1],mc_CT3[["RMSE"]][1],mc_13_15E[["RMSE"]][1]))
+RMSE_STRS <- as.matrix(list(mc_5A[["RMSE"]][2],mc_4A[["RMSE"]][2],mc_16_20[["RMSE"]][2],mc_8_9D[["RMSE"]][2],mc_CT3[["RMSE"]][2],mc_13_15E[["RMSE"]][2]))
+
+
+sample_comp <- as.data.frame(cbind(bias_SRS,bias_STRS,MSE_SRS,MSE_STRS,RMSE_SRS,RMSE_STRS))
+sample_comp$event <- c("5A","4A","16-20","8-9D","CT3","13-15E")
+colnames(sample_comp) <- c("bias_SRS","bias_STRS","MSE_SRS","MSE_STRS","RMSE_SRS","RMSE_STRS","event")
+
+sample_comp_bias <- pivot_longer(sample_comp,cols = c("bias_SRS","bias_STRS"), names_to = "sampling_design" , values_to = c("bias"))
+sample_comp_bias <- sample_comp_bias[,c(5:7)]
+sample_comp_bias$bias <- as.matrix(unlist(sample_comp_bias$bias))
+sample_comp_bias$sampling_design <- substr(sample_comp_bias$sampling_design,6,9)
+str(sample_comp_bias)
+
+sample_comp_MSE <- pivot_longer(sample_comp,cols = c("MSE_SRS","MSE_STRS"), names_to = "sampling_design" , values_to = c("MSE"))
+sample_comp_MSE <- sample_comp_MSE[,c(5:7)]
+sample_comp_MSE$MSE <- as.matrix(unlist(sample_comp_MSE$MSE))
+sample_comp_MSE$sampling_design <- substr(sample_comp_MSE$sampling_design,5,9)
+
+sample_comp_RMSE <- pivot_longer(sample_comp,cols = c("RMSE_SRS","RMSE_STRS"), names_to = "sampling_design" , values_to = c("RMSE"))
+sample_comp_RMSE <- sample_comp_RMSE[,c(5:7)]
+sample_comp_RMSE$RMSE <- as.matrix(unlist(sample_comp_RMSE$RMSE))
+sample_comp_RMSE$sampling_design <- substr(sample_comp_RMSE$sampling_design,6,9)
+
+# plot bias
+bias_plot <- ggplot(sample_comp_bias, aes(event,abs(bias), fill = sampling_design))+
+  geom_bar(stat = "identity",position = "dodge")+
+  ylab("bias (absolute value) (m3)")
+bias_plot
+
+
+MSE_plot <- ggplot(sample_comp_MSE, aes(event,MSE, fill = sampling_design))+
+  geom_bar(stat = "identity",position = "dodge")+
+  ylab("mean square error (m3)2")
+
+MSE_plot
+
+RMSE_plot <- ggplot(sample_comp_RMSE, aes(event,RMSE, fill = sampling_design))+
+  geom_bar(stat = "identity",position = "dodge")+
+  ylab("RMSE (m3)")
+
+RMSE_plot
+```
+
+#### Results of simulation
+
+### Stratified random sampling performed better in the monte carlo simulation.
+### Bias for both designs was small.
+### Accuracy (MSE and RMSE) was lesser for stratified random sampling than simple random sampling. This was especially true for the events that were most variable (5A and 4A).
+### Likely best to go with stratified random sampling.
+
+### Drawing a stratified random sample
+
+```{r}
+##Take stratified sample.
+#set seed
+set.seed(54)
+#make sure data is grouped correctly
+#print(group_data(biomass_summary),n=24)
+
+nested_neymans <- biomass_summary %>%
+  group_by(event_short,strata) %>%
+  nest() %>%
+  ungroup() %>%
+  mutate(n = c(3,3,10,2,3,11,3,4,6,2,2,6,3,3,11,2,3,11,4,2,8,4,4,9))
+
+nested_neymans$event_short <- as.factor(nested_neymans$event_short)
+nested_neymans$strata <- as.factor(nested_neymans$strata)
+#print(nested_neymans,n=24)
+
+sampled_neymans <- nested_neymans %>%
+    mutate(samp = map2(data, n, sample_n))
+
+sampled_neymans_list <- sampled_neymans %>%
+  select(-data) %>%
+  unnest(samp)
+
+
+sampled_neymans_list <- subset(sampled_neymans_list, event_short != "2H" & event_short != "5C")
+LC_meta <- read.csv("LC_2023/2023_growth_inventory_analysis/LC_9_20_growth_data_cleaned.csv")
+LC_meta <- subset(LC_meta, select = c("row", "column","ID","event","event_short"))
+
+sampled_neymans_list <- inner_join(sampled_neymans_list, LC_meta, by = c("ID","event_short"))
+
+
+sample_list_priority <- subset(sampled_neymans_list, event_short == "5A" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D")
+
+sample_list_priority <- subset(sample_list_priority, select = c("row","column","ID","event_short","block","construct"))
+
+print(sample_list_priority,n=57)
+write.csv(sample_list_priority, file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_stratified.csv")
+                               
+sample_list_priority2 <- subset(sampled_neymans_list, event_short == "13-15E" | event_short == "CT3")
+sample_list_priority2 <- subset(sample_list_priority2, select = c("row","column","ID","event_short","block","construct"))
+print(sample_list_priority2,n=33)
+write.csv(sample_list_priority2, file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_stratified.csv")
+
+```
+
+
+```{r}
+#take a random sample
+set.seed(55)
+
+
+biomass_random_sample <- biomass_summary %>%
+  group_by(event_short) %>%
+  sample_frac(0.5)
+
+biomass_random_sample <- inner_join(biomass_random_sample, LC_meta)
+
+sample_priority1_SRS <- subset(biomass_random_sample, event_short == "5A" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D")
+
+write.csv(sample_priority1_SRS,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_SRS.csv")
+
+sample_priority2_SRS <- subset(biomass_random_sample, event_short == "13-15E" | event_short == "CT3" )
+
+write.csv(sample_priority2_SRS,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_SRS.csv")
+```
+```{r}
+#amending the SRS list due to damaged trees and trees with water bags.
+
+set.seed(67)
+biomass_replacement_set <- biomass_summary[!(biomass_summary$ID %in% biomass_random_sample$ID),]
+#replace LCOR-107 due to water bag with another 16-20 tree.
+#replace LCOR-505 due to damage with another 16-20 tree
+
+reps_16_20 <- subset(biomass_replacement_set, event_short =="16-20") %>%
+  group_by(event_short) %>%
+  sample_n(2)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample, ID != "LCOR-107"& ID != "LCOR-505")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_16_20)
+#4A
+#replace LCOR-233 due to water bag, with another 4A tree
+reps_4A <- subset(biomass_replacement_set, event_short =="4A") %>%
+  group_by(event_short) %>%
+  sample_n(1)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-233")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_4A)
+#5A
+#replace LCOR 251 and LCOR 161 due to water bags with 2 other 5A trees
+reps_5A <- subset(biomass_replacement_set, event_short =="5A") %>%
+  group_by(event_short) %>%
+  sample_n(2)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-251"& ID !="LCOR-161")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_5A)
+
+#13-15E
+#replace LCOR-606 due to damage and LCOR-075 due to water bag with 2 other 13-15E
+reps_13_15E <- subset(biomass_replacement_set, event_short =="13-15E") %>%
+  group_by(event_short) %>%
+  sample_n(2)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-606"& ID !="LCOR-075")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_13_15E)
+
+#CT3
+#replace LCOR-197 and LCOR 503 due to damage with 2 other CT3
+
+reps_CT3 <- subset(biomass_replacement_set, event_short =="CT3") %>%
+  group_by(event_short) %>%
+  sample_n(2)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-503"& ID !="LCOR-197")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_CT3)
+
+#######
+#save new lists
+
+
+sample_priority1_SRS_v2 <- subset(biomass_random_sample_v2, event_short == "5A" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D")
+
+write.csv(sample_priority1_SRS_v2,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_SRS_v2.csv")
+
+sample_priority2_SRS_v2 <- subset(biomass_random_sample_v2, event_short == "13-15E" | event_short == "CT3" )
+
+write.csv(sample_priority2_SRS_v2,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_SRS_v2.csv")
+
+
+```
+

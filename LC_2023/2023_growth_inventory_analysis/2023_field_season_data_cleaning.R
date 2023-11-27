@@ -357,6 +357,18 @@ plot(ht_model2, which = 2)
 plot(ht_model2, which = 3)
 #looks ok
 
+#Calculate volume index
+
+growth_dat_clean$V49 = ((3.14159*(((growth_dat_clean$D49/10)/2)^2))*(growth_dat_clean$H49/10))
+growth_dat_clean$V144 = ((3.14159*(((growth_dat_clean$D144/10)/2)^2))*(growth_dat_clean$H144/10))
+growth_dat_clean$V299 = ((3.14159*(((growth_dat_clean$D299/10)/2)^2))*(growth_dat_clean$H299/10))
+growth_dat_clean$V335 = ((3.14159*(((growth_dat_clean$D335/10)/2)^2))*(growth_dat_clean$H335/10))
+growth_dat_clean$V357 = ((3.14159*(((growth_dat_clean$D357/10)/2)^2))*(growth_dat_clean$H357/10))
+growth_dat_clean$V385 = ((3.14159*(((growth_dat_clean$D385/10)/2)^2))*(growth_dat_clean$H385/10))
+growth_dat_clean$V421 = ((3.14159*(((growth_dat_clean$D421/10)/2)^2))*(growth_dat_clean$H421/10))
+growth_dat_clean$V497 = ((3.14159*(((growth_dat_clean$D497/10)/2)^2))*(growth_dat_clean$H497/10))
+growth_dat_clean$V664 = ((3.14159*(((growth_dat_clean$D664/10)/2)^2))*(growth_dat_clean$H664/10))
+growth_dat_clean$V801 = ((3.14159*(((growth_dat_clean$D801/10)/2)^2))*(growth_dat_clean$H801/10))
 
 write.csv(growth_dat_clean, file = "LC_2023/2023_growth_inventory_analysis/LC_9_20_growth_data_cleaned.csv")
 
