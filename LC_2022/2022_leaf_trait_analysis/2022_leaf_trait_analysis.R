@@ -11,15 +11,27 @@ library(nlme)
 library(lme4)
 
 
-leaf_area_2022 <- read.csv(file = "2022_leaf_trait_analysis/2022_leaf_morphology/LB_Leafarea_2022_fixed.csv", skip =2)
-
+leaf_area_2022 <- read.csv(file = "LC_2022/2022_leaf_trait_analysis/2022_leaf_morphology/LB_Leafarea_2022_fixed.csv", skip =2)
+str(leaf_area_2022)
 leaf_area_2022 <- na.omit(leaf_area_2022)
 
-growth <- read.csv(file = '2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv')
-
-leaf_area_dat <- inner_join(leaf_area_2022, growth, by = "ID")
+growth <- read.csv(file = 'LC_2022/2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv')
 
 
-##plot
-ggplot(leaf_area_dat, aes(x=event_short, y=average_LA, fill = construct2))+
-  geom_boxplot()
+
+leaf_mass_2022 <- read.csv(file = "LC_2022/2022_leaf_trait_analysis/2022_leaf_morphology/Leaf_mass_LC_2022.csv")
+str(leaf_mass_2022)
+leaf_mass_2022$Leaf.3 <- as.numeric(leaf_mass_2022$Leaf.3)
+leaf_mass_2022$avg_mass <- as.numeric(leaf_mass_2022$avg_mass)
+leaf_mass_2022 <- na.omit(leaf_mass_2022)
+
+
+SLA_2022 <- inner_join(leaf_area_2022,leaf_mass_2022)
+SLA_2022$SLA <- SLA_2022$average_LA/SLA_2022$avg_mass
+SLA_2022$LMA <- 1/SLA_2022$SLA
+
+write.csv(SLA_2022, file = "LC_2022/2022_leaf_trait_analysis/2022_leaf_morphology/SLA_2022_raw.csv")
+
+
+
+

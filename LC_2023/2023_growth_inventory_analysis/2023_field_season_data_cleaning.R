@@ -23,7 +23,7 @@ growth_dat22 <- filter(growth_dat22, !event_short == "CT1")
 #Compile 2023 data
 LC_meta <- read.csv("LC_2022/2022_growth&inventory_analylsis/growth_analysis/3_22_growth_cleaned_II.csv")
 LC_meta <- subset(LC_meta, select = c("row", "column","ID","event","event_short","block","construct","construct2"))
-growth_dat_may23 <- inner_join(growth_dat, LC_meta)
+growth_dat_may23 <- inner_join(growth_dat22, LC_meta)
 
 
 growth_dat_may_2023 <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/05_06_DBHH.csv",skip = 5)

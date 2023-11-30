@@ -448,4 +448,111 @@ HD_plot
 ggsave(filename = "LC_2023/2023_growth_inventory_analysis/final_HD_plot.png",plot= HD_plot, width= 8, height = 5, units = "in",dpi=300)
 
 
+#Explore spatial variation in covariates
+#read in covariates
+covariates_inner <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/covariates_inner.csv")
+covariates_full <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/covariates_full.csv")
+
+
+covariates_set_inner <- inner_join(growth, covariates_inner, by = "ID")
+covariates_set_full <- full_join(growth, covariates_full, by="ID")
+
+####SPAD
+
+str(covariates_set_full)
+
+ggplot(subset(covariates_set_full, avg_SPAD < 100), aes(x=event, y=avg_SPAD))+
+  geom_point()
+
+#spatially
+library(viridisLite)
+library(viridis)
+library(latticeExtra)
+
+levelplot(avg_SPAD ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+
+
+levelplot(SPAD_June_2022 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_July_2022 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_aug_2022 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_sep_2022 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_July_2023 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_Aug_2023 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(SPAD_Sep_2023 ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+
+
+##NDVI and other indices
+
+str(covariates_full)
+levelplot(GNDVI_mean ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+ggplot(subset(covariates_set_full, avg_SPAD < 100), aes(x=GNDVI_mean, y=SPAD_aug_2022))+
+  geom_point()
+
+levelplot(GRVI_mean ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(GCI_mean ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(ARI_mean ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+levelplot(RECI_mean ~-column*row, subset(covariates_set_full,avg_SPAD < 100),panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
+
+#crown area via shadows
+#scatter plot
+
+#log transformed
+ggplot(UAV_join, aes(x=log(V497),y=log(shadow_area), color = HD))+
+  geom_point()+
+  scale_color_viridis()+
+  geom_abline(intercept=-4.2078,slope = 0.4972)
+
+
+#would expect that trees with a lower height to diameter ratio may be branchier and tend to be above the fitted line.
+?geom_abline
+
+branchiness_lm <- lm(log(shadow_area)~log(V497), data =UAV_join )
+summary(branchiness_lm)
+plot(branchiness_lm, which = 1)
+#outliers to look at to see if they are branchier than expected
+
+#residuals from this relationship could feasibly be related to deviations of crown area from stem volume due to branchiness
+
+ggplot(UAV_join, aes(y=HD, x=branchiness_lm$residuals))+
+  geom_point()
+
+#there may be a slight relationship here but HD ratio does not seem to explain branchiness residuals
+
+#how to branchiness residuals vary spatially?
+
+library(latticeExtra)
+
+levelplot(branchiness_lm$residuals ~-column*row, UAV_join,panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+#this may be helpful. It does seem to match with where I see branchier trees.
+
+levelplot(shadow_area ~-column*row, UAV_join,panel = panel.levelplot.points, cex =1.2)+
+  layer_(panel.2dsmoother(..., n=424))
+
 
