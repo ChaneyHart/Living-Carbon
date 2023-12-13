@@ -314,10 +314,11 @@ sample_priority1_SRS <- subset(biomass_random_sample, event_short == "5A" | even
 
 write.csv(sample_priority1_SRS,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_SRS.csv")
 
-sample_priority2_SRS <- subset(biomass_random_sample, event_short == "13-15E" | event_short == "CT3" )
+sample_priority2_SRS <- subset(biomass_random_sample, event_short == "13-15E" | event_short == "CT3",event_short == "2H" )
 
 write.csv(sample_priority2_SRS,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_SRS.csv")
 ```
+
 ```{r}
 #amending the SRS list due to damaged trees and trees with water bags.
 
@@ -333,6 +334,7 @@ reps_16_20 <- subset(biomass_replacement_set, event_short =="16-20") %>%
 biomass_random_sample_v2 <- subset(biomass_random_sample, ID != "LCOR-107"& ID != "LCOR-505")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_16_20)
 #4A
+
 #replace LCOR-233 due to water bag, with another 4A tree
 reps_4A <- subset(biomass_replacement_set, event_short =="4A") %>%
   group_by(event_short) %>%
@@ -341,12 +343,12 @@ reps_4A <- subset(biomass_replacement_set, event_short =="4A") %>%
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-233")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_4A)
 #5A
-#replace LCOR 251 and LCOR 161 due to water bags with 2 other 5A trees
+#replace LCOR 251 and LCOR 161 due to water bags and LCOR 167 due to damage with 3 other 5A trees
 reps_5A <- subset(biomass_replacement_set, event_short =="5A") %>%
   group_by(event_short) %>%
-  sample_n(2)
+  sample_n(3)
 
-biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-251"& ID !="LCOR-161")
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-251"& ID !="LCOR-161"& ID != "LCOR-167")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_5A)
 
 #13-15E
@@ -369,6 +371,15 @@ biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-503"& I
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_CT3)
 
 #######
+#8-9D
+reps_8_9D <- subset(biomass_replacement_set, event_short =="8-9D") %>%
+  group_by(event_short) %>%
+  sample_n(1)
+
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-094")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_8_9D)
+
+
 #save new lists
 
 
