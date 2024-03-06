@@ -90,14 +90,16 @@ dat_7_26_6800 <- inner_join(dat_7_26_6800, LC_meta, by = "ID")
 dat_7_26_600 <- inner_join(dat_7_26_600, LC_meta, by = "ID")
 
 dat_7_26_6800 <- dat_7_26_6800 %>% mutate(Class = case_when(
-  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "elite",
-  event_short == "13-15E" | event_short == "2H" ~ "poor",
-  event_short == "16-20" | event_short == "8-9D" | event_short == "CT3" ~ "control"))
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
+  event_short == "16-20" | event_short == "8-9D" ~ "Control",
+  event_short == "CT3" ~ "WT"))
 
 dat_7_26_600 <- dat_7_26_600 %>% mutate(Class = case_when(
-  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "elite",
-  event_short == "13-15E" | event_short == "2H" ~ "poor",
-  event_short == "16-20" | event_short == "8-9D" | event_short == "CT3" ~ "control"))
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
+  event_short == "16-20" | event_short == "8-9D" ~ "Control",
+  event_short == "CT3" ~ "WT"))
 
 #define control trees and drought trees 
 control_trees <- read.csv(file="LC_2023/2023_Sampling/Other/Lc_irrigation_sampleII.csv")
@@ -105,55 +107,16 @@ drought_trees <- LC_meta[!(LC_meta$ID %in% control_trees$ID),]
 
 
 dat_7_26_6800 <- dat_7_26_6800 %>% mutate(treatment = case_when(
-  ID %in% control_trees$ID ~ "control",
+  ID %in% control_trees$ID ~ "irrigated",
   ID %in% drought_trees$ID ~ "drought"
 ))
 
 
 dat_7_26_600 <- dat_7_26_600 %>% mutate(treatment = case_when(
-  ID %in% control_trees$ID ~ "control",
+  ID %in% control_trees$ID ~ "irrigated",
   ID %in% drought_trees$ID ~ "drought"
 ))
 
-
-#How well do same measurements from different machines match
-ggplot(dat_7_26, aes(x=gsw.x, y=gsw.y))+
-  geom_point()+
-  xlab("gsw_li600")+
-  ylab("gsw_li6800")
-ggplot(dat_7_26, aes(x=VPDleaf.x, y=VPDleaf.y))+
-  geom_point()             
-ggplot(dat_7_26, aes(x=PhiPS2.x, y=PhiPS2.y))+
-  geom_point()  
-ggplot(dat_7_26, aes(x=ETR.x, y=ETR.y))+
-  geom_point()  
-
-
-#Explore event differences and hourly trends
-
-ggplot(dat_7_26,aes(x= Timepoint, y=A, fill = construct2))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=A, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=gsw.x, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=gsw.y, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=PhiPS2.x, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=PhiPS2.y, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=ETR.x, fill = Class))+
-  geom_boxplot()
-
-ggplot(dat_7_26,aes(x= Timepoint, y=ETR.y, fill = Class))+
-  geom_boxplot()
 
 ###
 # Summary tables and graphs
@@ -207,6 +170,9 @@ July_600_summary_event <- subset(dat_7_26_600,) %>% dplyr::group_by(event_short,
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
 )
 
 write.csv(July_600_summary_event, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/July_26_600_diurnal_summary_event.csv)")
@@ -228,7 +194,10 @@ July_600_summary_tree <- subset(dat_7_26_600,) %>% dplyr::group_by(ID,Timepoint,
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
-  PhiPS2_600 = mean(PhiPS2)
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
+  
 )
 
 write.csv(July_600_summary_tree, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/July_26_600_diurnal_summary_tree.csv)")
@@ -260,6 +229,9 @@ July_600_summary_class <- subset(dat_7_26_600,) %>% dplyr::group_by(Class,Timepo
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
 )
 
 write.csv(July_600_summary_class, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/July_26_600_diurnal_summary_class.csv)")
@@ -275,48 +247,74 @@ July_summary_class <- inner_join(July_600_summary_class, July_6800_summary_class
 #graph
 #define colors
 library(RColorBrewer)
-my_colors <- c("gray0","indianred3","chartreuse4")
+my_colors <- c("gray0","chartreuse4","indianred3","grey")
 
 library(ggsignif)
 library(gridExtra)
-July_assimilation <- ggplot(July_summary_class, aes(x = Timepoint, color = Class, shape = treatment))+
+July_assimilation <- ggplot(subset(July_summary_class,treatment == "drought"), aes(x = Timepoint, group = Class,color = Class, shape = treatment))+
   geom_point(aes(y = A), size = 2)+
   geom_line(aes(y = A))+ 
   geom_errorbar(aes(ymin = A-A_se, ymax = A+A_se), width = 0.2)+
   scale_color_manual(values = my_colors)+
   ylab("Assimilation (µmol/m^2*s)")+
-  geom_signif(aes(x= Timepoint, y=A),comparisons = list(c("control","elite")),map_signif_level=TRUE, y_position = 15)
+  xlab("Hour")+
+  geom_signif(aes(x= Timepoint, y=A),comparisons = list(c("control","elite")),map_signif_level=TRUE, y_position = 15)+
+  theme_bw()
 
 July_assimilation
 
 July_gsw <- ggplot(July_summary_class, aes(x = Timepoint, color = Class, shape = treatment))+
-  geom_point(aes(y = gsw), size = 2)+
-  geom_line(aes(y = gsw))+ 
-  geom_errorbar(aes(ymin = gsw-gsw_se, ymax = gsw+gsw_se), width = 0.2)+
+  geom_point(aes(y = gsw,alpha=treatment), size = 2)+
+  geom_line(aes(y = gsw,linetype = treatment,alpha=treatment))+
+  scale_alpha_manual(values=c(1,0.5))+
+  geom_errorbar(aes(ymin = gsw-gsw_se, ymax = gsw+gsw_se,linetype = treatment,alpha=treatment), width = 0.2)+
   scale_color_manual(values = my_colors)+
-  ylab("Stomatal conductance (mmol/m^2*s)")
+  ylab("Stomatal conductance (mmol/m^2*s)")+
+  xlab("Hour")+
+  theme_bw()
+
 July_gsw
 
+
 July_ETR <- ggplot(July_summary_class, aes(x = Timepoint, color = Class, shape = treatment))+
-  geom_point(aes(y = ETR), size = 2)+
-  geom_line(aes(y = ETR))+ 
-  geom_errorbar(aes(ymin = ETR-ETR_se, ymax = ETR+ETR_se), width = 0.2)+
+  geom_point(aes(y = ETR,alpha=treatment), size = 2)+
+  geom_line(aes(y = ETR, linetype = treatment,alpha=treatment))+
+  scale_alpha_manual(values=c(1,0.5))+
+  geom_errorbar(aes(ymin = ETR-ETR_se, ymax = ETR+ETR_se,linetype = treatment,alpha=treatment), width = 0.2)+
   scale_color_manual(values = my_colors)+
-  ylab("Electron transport rate (µmol/m^2*s)")
+  ylab("Electron transport rate (µmol/m^2*s)")+
+  xlab("Hour")+
+  theme_bw()
 July_ETR
+
+#looks to me like a possible outlier is present for high silencing trees at 14:00
+
+July_PhiPS2 <- ggplot(July_summary_class, aes(x = Timepoint, color = Class, shape= treatment))+
+  geom_point(aes(y = PhiPS2,alpha=treatment), size = 2)+
+  geom_line(aes(y = PhiPS2,linetype = treatment,alpha=treatment))+
+  scale_alpha_manual(values=c(1,0.5))+
+  geom_errorbar(aes(ymin = PhiPS2-PhiPS2_se, ymax = PhiPS2+PhiPS2_se,linetype = treatment,alpha=treatment), width = 0.2)+
+  scale_color_manual(values = my_colors)+
+  ylab("efficiency of PSII")+
+  xlab("Hour")+
+  theme_bw()
+
+July_PhiPS2
+
 
 July_diurnal_phys_plot <- grid.arrange(July_assimilation, July_gsw, July_ETR, nrow=3)
 ggsave(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/July_diurnal_phys_plot.png", plot = July_diurnal_phys_plot, height = 10, units = "in", dpi = 300)
 
-July_Tleaf <- ggplot(July_summary_class, aes(x = Timepoint, group = Class, color = Class))+
-  geom_point(aes(y = Tleaf), size = 2)+
-  geom_line(aes(y = Tleaf))+ 
-  geom_errorbar(aes(ymin = Tleaf-Tleaf_se, ymax = Tleaf+Tleaf_se), width = 0.2)+
+July_Tleaf <- ggplot(July_summary_class, aes(x = Timepoint, color = Class, shape = treatment))+
+  geom_point(aes(y = Tleaf,alpha=treatment), size = 2)+
+  geom_line(aes(y = Tleaf,linetype = treatment,alpha=treatment))+ 
+  scale_alpha_manual(values=c(1,0.5))+
+  geom_errorbar(aes(ymin = Tleaf-Tleaf_se, ymax = Tleaf+Tleaf_se,linetype = treatment,alpha=treatment), width = 0.2)+
   scale_color_manual(values = my_colors)+
   ylab("Leaf Temp (˚C)")
 July_Tleaf
 
-July_VPDleaf <- ggplot(July_summary_class, aes(x = Timepoint, group = Class, color = Class))+
+July_VPDleaf <- ggplot(July_summary_class, aes(x = Timepoint, color = Class,))+
   geom_point(aes(y = VPDleaf), size = 2)+
   geom_line(aes(y = VPDleaf))+ 
   geom_errorbar(aes(ymin = VPDleaf-VPDleaf_se, ymax = VPDleaf+VPDleaf_se), width = 0.2)+
@@ -350,7 +348,7 @@ July_resp_dat$Resp_temp <- July_resp_dat$Tleaf
 July_resp_dat <- subset(July_resp_dat, select = c(ID,Rd,Resp_temp))
 July_fluor_set <- left_join(July_fluor_set, July_resp_dat)
 
-July_fluor_set$R <- (July_fluor_set$Rd*2.2)^((July_fluor_set$Tleaf - July_fluor_set$Resp_temp)/10)
+July_fluor_set$R <- (-1*July_fluor_set$Rd*2.2)^((July_fluor_set$Tleaf - July_fluor_set$Resp_temp)/10)
 
 #(July_fluor_set$Rd*2.2)^July_fluor_set$resp_factor
 #July_fluor_set$resp_factor <- (July_fluor_set$Tleaf - July_fluor_set$Resp_temp)/10

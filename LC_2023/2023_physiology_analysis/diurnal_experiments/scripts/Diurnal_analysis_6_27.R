@@ -90,17 +90,18 @@ str(dat_6_27_600)
 #add class factor
 
 dat_6_27_6800 <- dat_6_27_6800 %>% mutate(Class = case_when(
-  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "elite",
-  event_short == "13-15E" | event_short == "2H" ~ "poor",
-  event_short == "16-20" | event_short == "8-9D" | event_short == "CT3" ~ "control"))
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
+  event_short == "16-20" | event_short == "8-9D" ~ "Control",
+  event_short == "CT3" ~ "WT"))
 
 dat_6_27_600 <- dat_6_27_600 %>% mutate(Class = case_when(
-  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "elite",
-  event_short == "13-15E" | event_short == "2H" ~ "poor",
-  event_short == "16-20" | event_short == "8-9D" | event_short == "CT3" ~ "control"))
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
+  event_short == "16-20" | event_short == "8-9D" ~ "Control",
+  event_short == "CT3" ~ "WT"))
 
 #Create Summary table and graph
-
 
 
 June_6800_summary_event <- subset(dat_6_27_6800, A > 0) %>% dplyr::group_by(event_short,Timepoint) %>% dplyr::summarize(
@@ -139,6 +140,9 @@ June_600_summary_event <- subset(dat_6_27_600,) %>% dplyr::group_by(event_short,
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
 )
 
 write.csv(June_600_summary_event, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/June_26_600_diurnal_summary_event.csv)")
@@ -160,7 +164,9 @@ June_600_summary_tree <- subset(dat_6_27_600,) %>% dplyr::group_by(ID,Timepoint)
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
-  PhiPS2 = mean(PhiPS2)
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
 )
 
 write.csv(June_600_summary_tree, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/June_26_600_diurnal_summary_tree.csv)")
@@ -193,6 +199,9 @@ June_600_summary_class <- subset(dat_6_27_600,) %>% dplyr::group_by(Class,Timepo
   VPDleaf_sd = sd(VPDleaf),
   VPDleaf = mean(VPDleaf),
   VPDleaf_se = (VPDleaf_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n)))
 )
 
 write.csv(June_600_summary_class, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/June_26_600_diurnal_summary_class.csv)")
@@ -203,11 +212,169 @@ June_summary <- inner_join(June_600_summary, June_6800_summary, by = c("event_sh
 
 June_summary_class <- inner_join(June_600_summary_class, June_6800_summary_class, by = c("Class","Timepoint"))
 
+#respiration data
+
+June_resp_dat <- subset(dat_6_27_6800, A < 0)
+June_resp_dat$Rd <- June_resp_dat$A
+June_resp_dat$Resp_temp <- June_resp_dat$Tleaf
+
+June_resp_dat <- subset(June_resp_dat, select = c(ID,Rd,Resp_temp))
+#join with data that has full measurements from 6800 and 600
+
+June_fluor_set <- inner_join(June_6800_summary_tree,June_600_summary_tree, by = c("ID","Timepoint"))
+
+June_fluor_set <- left_join(June_fluor_set, June_resp_dat)
+
+June_fluor_set$R <- (-1*June_fluor_set$Rd*2.2)^((June_fluor_set$Tleaf - June_fluor_set$Resp_temp)/10)
+
+June_fluor_set$Theta_e <- (4*(June_fluor_set$PhiPS2 - 0.026947))/7.567127
+#values derived from low O2 conditions
+June_fluor_set$Jt <- June_fluor_set$Theta_e*June_fluor_set$PAR
+June_fluor_set$Jo <- (2/3)*(June_fluor_set$Jt - (4*(June_fluor_set$A + June_fluor_set$Rd)))
+June_fluor_set$Rl <- (1/12)*(June_fluor_set$Jt - (4*(June_fluor_set$A + June_fluor_set$Rd)))
+June_fluor_set$Jc <- (1/3)*(June_fluor_set$Jt + (8*(June_fluor_set$A + June_fluor_set$Rd)))
+June_fluor_set$Jo_ratio <- June_fluor_set$Jo/June_fluor_set$Jt
+
+June_fluor_set <- inner_join(June_fluor_set, LC_meta, by = "ID")
+
+June_fluor_set <- June_fluor_set %>% mutate(Class = case_when(
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
+  event_short == "16-20" | event_short == "8-9D" ~ "Control",
+  event_short == "CT3" ~ "WT"))
+
+June_fluor_set <- June_fluor_set %>% mutate(treatment = case_when(
+  ID %in% control_trees$ID ~ "control",
+  ID %in% drought_trees$ID ~ "drought"
+))
+
+June_fluor_set_clean <- filter(June_fluor_set, R > 0)
+
+June_fluor_set_summary_event <- June_fluor_set_clean %>% dplyr::group_by(event_short,Timepoint) %>% dplyr::summarize(
+  n = n(),
+  A_sd = sd(A),
+  A = mean(A),
+  A_se = (A_sd/(sqrt(n))),
+  ETR_sd = sd(ETR),
+  ETR = mean(ETR),
+  ETR_se = (ETR_sd/(sqrt(n))),
+  PAR_sd = sd(PAR),
+  PAR = mean(PAR),
+  PAR_se = (PAR_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n))),
+  Jt_sd = sd(Jt),
+  Jt = mean(Jt),
+  Jt_se = (Jt_sd/(sqrt(n))),
+  Jo_sd = sd(Jo),
+  Jo = mean(Jo),
+  Jo_se = (Jo_sd/(sqrt(n))),
+  Jc_sd = sd(Jc),
+  Jc = mean(Jc),
+  Jc_se = (Jc_sd/(sqrt(n))),
+  Rd_sd = sd(Rd),
+  Rd = mean(Rd),
+  Rd_se = (Rd_sd/(sqrt(n))),
+  Tleaf_sd = sd(Tleaf),
+  Tleaf = mean(Tleaf),
+  Tleaf_se = (Tleaf_sd/(sqrt(n))),
+  Jo_ratio_sd = sd(Jo_ratio),
+  Jo_ratio = mean(Jo_ratio),
+  Jo_ratio_se = (Jo_ratio_sd/(sqrt(n))),
+  gsw_sd = sd(gsw),
+  gsw = mean(gsw),
+  gsw_se = (gsw_sd/(sqrt(n)))
+)  
+
+
+
+write.csv(June_fluor_set_summary_event, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/June_28_fluor_set_diurnal_summary_event.csv)")
+
+June_fluor_set_summary_class <- June_fluor_set_clean %>% dplyr::group_by(Class,Timepoint) %>% dplyr::summarize(
+  n = n(),
+  A_sd = sd(A),
+  A = mean(A),
+  A_se = (A_sd/(sqrt(n))),
+  ETR_sd = sd(ETR),
+  ETR = mean(ETR),
+  ETR_se = (ETR_sd/(sqrt(n))),
+  PAR_sd = sd(PAR),
+  PAR = mean(PAR),
+  PAR_se = (PAR_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n))),
+  Jt_sd = sd(Jt),
+  Jt = mean(Jt),
+  Jt_se = (Jt_sd/(sqrt(n))),
+  Jo_sd = sd(Jo),
+  Jo = mean(Jo),
+  Jo_se = (Jo_sd/(sqrt(n))),
+  Jc_sd = sd(Jc),
+  Jc = mean(Jc),
+  Jc_se = (Jc_sd/(sqrt(n))),
+  Rd_sd = sd(Rd),
+  Rd = mean(Rd),
+  Rd_se = (Rd_sd/(sqrt(n))),
+  Rl_sd = sd(Rl),
+  Rl = mean(Rl),
+  Rl_se = (Rl_sd/(sqrt(n))),
+  Tleaf_sd = sd(Tleaf),
+  Tleaf = mean(Tleaf),
+  Tleaf_se = (Tleaf_sd/(sqrt(n))),
+  Jo_ratio_sd = sd(Jo_ratio),
+  Jo_ratio = mean(Jo_ratio),
+  Jo_ratio_se = (Jo_ratio_sd/(sqrt(n))),
+  gsw_sd = sd(gsw),
+  gsw = mean(gsw),
+  gsw_se = (gsw_sd/(sqrt(n)))
+)
+
+write.csv(June_fluor_set_summary_class, file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_analysis/June_28_fluor_set_diurnal_summary_class.csv)")
+
+June_fluor_set_summary_tree <- June_fluor_set_clean %>% dplyr::group_by(ID,Timepoint) %>% dplyr::summarize(
+  n = n(),
+  A_sd = sd(A),
+  A = mean(A),
+  A_se = (A_sd/(sqrt(n))),
+  ETR_sd = sd(ETR),
+  ETR = mean(ETR),
+  ETR_se = (ETR_sd/(sqrt(n))),
+  PAR_sd = sd(PAR),
+  PAR = mean(PAR),
+  PAR_se = (PAR_sd/(sqrt(n))),
+  PhiPS2_sd = sd(PhiPS2),
+  PhiPS2 = mean(PhiPS2),
+  PhiPS2_se = (PhiPS2_sd/(sqrt(n))),
+  Jt_sd = sd(Jt),
+  Jt = mean(Jt),
+  Jt_se = (Jt_sd/(sqrt(n))),
+  Jo_sd = sd(Jo),
+  Jo = mean(Jo),
+  Jo_se = (Jo_sd/(sqrt(n))),
+  Jc_sd = sd(Jc),
+  Jc = mean(Jc),
+  Jc_se = (Jc_sd/(sqrt(n))),
+  Rd_sd = sd(Rd),
+  Rd = mean(Rd),
+  Rd_se = (Rd_sd/(sqrt(n))),
+  Tleaf_sd = sd(Tleaf),
+  Tleaf = mean(Tleaf),
+  Tleaf_se = (Tleaf_sd/(sqrt(n))),
+  Jo_ratio_sd = sd(Jo_ratio),
+  Jo_ratio = mean(Jo_ratio),
+  Jo_ratio_se = (Jo_ratio_sd/(sqrt(n))),
+  gsw_sd = sd(gsw),
+  gsw = mean(gsw),
+  gsw_se = (gsw_sd/(sqrt(n)))
+)
+
 
 #graph
 #define colors
 library(RColorBrewer)
-my_colors <- c("gray0","indianred3","chartreuse4")
+my_colors <- c("gray0","chartreuse4","indianred3","grey")
 
 library(ggsignif)
 library(gridExtra)
@@ -217,7 +384,10 @@ June_assimilation <- ggplot(June_summary_class, aes(x = Timepoint, group = Class
   geom_errorbar(aes(ymin = A-A_se, ymax = A+A_se), width = 0.2)+
   scale_color_manual(values = my_colors)+
   ylab("Assimilation (µmol/m^2*s)")+
-  geom_signif(aes(x= Timepoint, y=A),comparisons = list(c("control","elite")),map_signif_level=TRUE, y_position = 15)
+  xlab("Hour")+
+  geom_signif(aes(x= Timepoint, y=A),comparisons = list(c("control","elite")),map_signif_level=TRUE, y_position = 15)+
+  theme_bw()
+  
 
 June_assimilation
 
@@ -226,7 +396,9 @@ June_gsw <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color =
   geom_line(aes(y = gsw))+ 
   geom_errorbar(aes(ymin = gsw-gsw_se, ymax = gsw+gsw_se), width = 0.2)+
   scale_color_manual(values = my_colors)+
-  ylab("Stomatal conductance (mmol/m^2*s)")
+  ylab("Stomatal conductance (mmol/m^2*s)")+
+  xlab("Hour")+
+  theme_bw()
 June_gsw
 
 June_ETR <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color = Class))+
@@ -234,19 +406,76 @@ June_ETR <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color =
   geom_line(aes(y = ETR))+ 
   geom_errorbar(aes(ymin = ETR-ETR_se, ymax = ETR+ETR_se), width = 0.2)+
   scale_color_manual(values = my_colors)+
-  ylab("Electron transport rate (µmol/m^2*s)")
+  ylab("Electron transport rate (µmol/m^2*s)")+
+  xlab("Hour")+
+  theme_bw()
 June_ETR
 
-June_diurnal_phys_plot <- grid.arrange(June_assimilation, June_gsw, June_ETR, nrow=3)
-ggsave(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/June_diurnal_phys_plot.png", plot = June_diurnal_phys_plot, height = 10, units = "in", dpi = 300)
+June_PhiPS2 <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color = Class))+
+  geom_point(aes(y = PhiPS2), size = 2)+
+  geom_line(aes(y = PhiPS2))+ 
+  geom_errorbar(aes(ymin = PhiPS2-PhiPS2_se, ymax = PhiPS2+PhiPS2_se), width = 0.2)+
+  scale_color_manual(values = my_colors)+
+  ylab("efficiency of PSII")+
+  xlab("Hour")+
+  theme_bw()
+
+June_PhiPS2
 
 June_Tleaf <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color = Class))+
   geom_point(aes(y = Tleaf), size = 2)+
   geom_line(aes(y = Tleaf))+ 
   geom_errorbar(aes(ymin = Tleaf-Tleaf_se, ymax = Tleaf+Tleaf_se), width = 0.2)+
   scale_color_manual(values = my_colors)+
-  ylab("Leaf Temp (˚C)")
+  ylab("Leaf Temp (˚C)")+
+  xlab("Hour")+
+  theme_bw()
 June_Tleaf
+
+June_diurnal_phys_plot <- grid.arrange(June_assimilation, June_ETR, June_gsw,June_PhiPS2,June_Tleaf,nrow=2)
+ggsave(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/June_diurnal_phys_plot.png", plot = June_diurnal_phys_plot, height = 8, width = 12, units = "in", dpi = 300)
+
+#photorespiration phys
+
+png(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/A_ETR.png",height = 4, width = 4, units = "in",res = 300)
+ggplot(June_fluor_set, aes(x=A-R,y=ETR,color = Class))+
+  geom_point()+
+  scale_color_manual(values = my_colors)+
+  ylab("Electron transport rate (µmol/m^2*s)")+
+  xlab("Gross assimilation (µmol/m^2*s)")+
+  theme_bw()
+
+dev.off()
+
+
+June_Jo <- ggplot(June_fluor_set_summary_class, aes(x = Timepoint, group=Class,color = Class))+
+  geom_point(aes(y = Jo), size = 2)+
+  geom_line(aes(y = Jo))+ 
+  geom_errorbar(aes(ymin = Jo-Jo_se, ymax = Jo+Jo_se), width = 0.2)+
+  scale_color_manual(values = my_colors)+
+  ylab("Jo (µmol/m^2*s)")
+June_Jo
+
+June_Rl <- ggplot(June_fluor_set_summary_class, aes(x = Timepoint, group=Class,color = Class))+
+  geom_point(aes(y = Rl), size = 2)+
+  geom_line(aes(y = Rl))+ 
+  geom_errorbar(aes(ymin = Rl-Rl_se, ymax = Rl+Rl_se), width = 0.2)+
+  scale_color_manual(values = my_colors)+
+  ylab("Rl (µmol CO2 /m^2*s)")
+June_Rl
+
+
+June_Jo_ratio <- ggplot(subset(June_fluor_set_summary_class, Timepoint != 18), aes(x = Timepoint, color = Class))+
+  geom_point(aes(y = Jo_ratio), size = 2)+
+  geom_line(aes(y = Jo_ratio))+ 
+  geom_errorbar(aes(ymin = Jo_ratio-Jo_ratio_se, ymax = Jo_ratio+Jo_ratio_se), width = 0.2)+
+  scale_color_manual(values = my_colors)+
+  ylab("Jo ratio")
+June_Jo_ratio
+
+
+June_photorespiration_plot <- grid.arrange(June_Jo, June_Rl, June_Jo_ratio, nrow=3)
+ggsave(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/June_photorespiration_plot.png",plot = June_photorespiration_plot, width = 8, height = 6, dpi = 300)
 
 June_VPDleaf <- ggplot(June_summary_class, aes(x = Timepoint, group = Class, color = Class))+
   geom_point(aes(y = VPDleaf), size = 2)+
@@ -269,10 +498,43 @@ ggsave(filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/June_diu
 
 #read in soil moisture data
 
-June_SM <- read.csv("LC_2023/2023_physiology_analysis/diurnal_experiments/6_27_moisture_data (filled).csv")
+June_SM <- read.csv("LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_field_conditions/6_27_moisture_data (filled).csv")
 mean(June_SM$SM.Av)
 mean(June_SM$SM.Av) - 2*(sd(June_SM$SM.Av)/(sqrt(48)))
 mean(June_SM$SM.Av) + 2*(sd(June_SM$SM.Av)/(sqrt(48)))
 
 
+#Bring in weather data
+library(lubridate)
+weather_6_27 <- read.csv(file = "LC_2023/2023_weather/weather_processed/2023_weather_hourly.csv")
+str(weather_6_27)
+weather_6_27$Datetime <- ymd_hms(weather_6_27$Datetime)
+weather_6_27$Date <- as.Date(weather_6_27$Datetime)
+weather_6_27$Date
+weather_6_27 <- subset(weather_6_27, Date == "2023-06-27")
+weather_6_27$hour <- hour(weather_6_27$Datetime)
 
+
+June_solar_rad <- ggplot(subset(weather_6_27, hour >= 8 & hour <= 18), aes(x = hour))+
+  geom_point(aes(y = solar_radiation_mean), size = 2)+
+  geom_line(aes(y = solar_radiation_mean))+ 
+  ylab("mean solar radiation (W/m2)")+
+  theme_bw()
+June_solar_rad
+
+June_air_temp <- ggplot(subset(weather_6_27, hour >= 8 & hour <= 18), aes(x = hour))+
+  geom_point(aes(y = air_temp_mean), size = 2)+
+  geom_line(aes(y = air_temp_mean))+ 
+  ylab("mean temp (˚C)")+
+  theme_bw()
+June_air_temp
+
+June_air_VPD <- ggplot(subset(weather_6_27, hour >= 8 & hour <= 18), aes(x = hour))+
+  geom_point(aes(y = VPD_mean), size = 2)+
+  geom_line(aes(y = VPD_mean))+ 
+  ylab("VPD (kPa)")+
+  theme_bw()
+June_air_VPD
+
+June_weather_station <- grid.arrange(June_solar_rad, June_air_temp, June_air_VPD, nrow=3)
+ggsave(plot = June_weather_station,filename = "LC_2023/2023_physiology_analysis/diurnal_experiments/June_weather_station.png",height = 8, width = 8, units = "in",dpi = 300 )

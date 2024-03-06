@@ -16,9 +16,13 @@ low_O2_dat$ETR <- as.numeric(low_O2_dat$ETR)
 
 low_O2_dat <- subset(low_O2_dat, A > 0)
 
+my_colors2 <- c("chartreuse4","gray0","chartreuse4","indianred3","indianred3","indianred3","gray0","gray")
 
 low_02_plot <- ggplot(low_O2_dat, aes(x=PhiCO2, y=PhiPS2, color = Event_short))+
-  geom_point()
+  geom_point()+
+  scale_color_manual(values = my_colors2)+
+  theme_bw()
+low_02_plot
 
 ggsave(filename = "LC_2023/2023_physiology_analysis/LC_2023_low_O2/low_O2_plot.png", plot = low_02_plot, dpi = 300)
 

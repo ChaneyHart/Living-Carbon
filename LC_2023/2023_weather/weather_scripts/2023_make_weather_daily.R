@@ -8,33 +8,93 @@ library(forecast)
 library(lubridate)
 
 #read in data
-weather <- read.csv("LC_2023/2023_weather/weather_processed/LC_2023_weather.csv", header = TRUE, stringsAsFactors = FALSE)
-weather$Datetime <- ymd_hms(weather$Datetime)
+weather_2023 <- read.csv("LC_2023/2023_weather/weather_processed/LC_2023_weather.csv", header = TRUE, stringsAsFactors = FALSE)
+weather_2022 <- read.csv("LC_2023/2023_weather/weather_processed/LC_2022_weather.csv", header = TRUE, stringsAsFactors = FALSE)
+#fix timestamp format
+weather_2023$Datetime <- ifelse(nchar(weather_2023$Datetime) == 10, paste0(weather_2023$Datetime," 00:00:00"),weather_2023$Datetime)
+weather_2023$Datetime <- ymd_hms(weather_2023$Datetime)
+weather_2022$Datetime <- ifelse(nchar(weather_2022$Datetime) == 10, paste0(weather_2022$Datetime," 00:00:00"),weather_2022$Datetime)
+weather_2022$Datetime <- ymd_hms(weather_2022$Datetime)
+
+#2022
+temp_set_2022 <- subset(weather_2022, select = c("Datetime","air_temp"))
+max_temp_2022 <- apply.daily(temp_set_2022, max)
+min_temp_2022 <- apply.daily(temp_set_2022, min)
+mean_temp_2022 <- apply.daily(temp_set_2022, mean)
+
+VPD_set_2022 <- subset(weather_2022, select = c("Datetime","VPD"))
+max_VPD_2022 <- apply.daily(VPD_set_2022, max)
+min_VPD_2022 <- apply.daily(VPD_set_2022, min)
 
 
-temp_set <- subset(weather, select = c("Datetime","air_temp"))
-max_temp <- apply.daily(temp_set, max)
-min_temp <- apply.daily(temp_set, min)
-mean_temp <- apply.daily(temp_set, mean)
+precip_set_2022 <- subset(weather_2022, select = c("Datetime","precip"))
+daily_precip_2022 <- apply.daily(precip_set_2022, sum)
 
-VPD_set <- subset(weather, select = c("Datetime","VPD"))
-max_VPD <- apply.daily(VPD_set, max)
-min_VPD <- apply.daily(VPD_set, min)
+weather_daily_2022 <- cbind(max_temp_2022,min_temp_2022,mean_temp_2022,max_VPD_2022,min_VPD_2022,daily_precip_2022)
+colnames(weather_daily_2022) <- c("max_temp","min_temp","mean_temp","max_VPD","min_VPD","daily_precip")
+d2022 <- weather_daily_2022
+Datetime2022 <- rownames(d2022)
+rownames(d2022) <- NULL
+weather_daily_2022 <- cbind(Datetime2022,d2022)
+weather_daily_2022 <- weather_daily_2022 %>% mutate(Datetime = ymd_hms(Datetime2022))
+weather_daily_2022$Date <- date(weather_daily_2022$Datetime)
+str(weather_daily_2022)
+weather_daily_2022 <- weather_daily_2022[,c(9,2,3,4,5,6,7)]
+write.csv(weather_daily_2022, "LC_2023/2023_weather/weather_processed/weather_daily_2022.csv")
+
+##read in prism data for 2022
+library(stringi)
+prism_2022 <- read.csv(file = "LC_2023/2023_weather/weather_raw/PRISM_dat_2022.csv",skip = 10)
+prism_2022$Date <- mdy(prism_2022$Date)
+str(prism_2022)
+colnames(prism_2022) <- c("Date","daily_precip","min_temp","mean_temp","max_temp","min_VPD","max_VPD")
+prism_2022$min_VPD <- prism_2022$min_VPD/10
+prism_2022$max_VPD <- prism_2022$max_VPD/10
+prism_2022 <- prism_2022[,c(1,5,3,4,7,6,2)]
+#replace last day (duplicate)
+prism_2022 <- prism_2022[-70,]
+full_2022 <- rbind(prism_2022,weather_daily_2022)
+write.csv(full_2022, file = "LC_2023/2023_weather/weather_processed/daily_weather_2022_plus_prism.csv")
+
+#read in PRISM data to imput 2023 precip
+
+PRISM_2023 <- read.csv(file = "LC_2023/2023_weather/PRISM_LC_early_2023.csv",skip=10)
+PRISM_2023$Date <- ymd(PRISM_2023$Date)
+colnames(PRISM_2023) <- c("Date","daily_precip","min_temp","mean_temp","max_temp","min_VPD","max_VPD")
+PRISM_2023_precip <- subset(PRISM_2023, select = c("Date","daily_precip"))
+
+#2023
+temp_set_2023 <- subset(weather_2023, select = c("Datetime","air_temp"))
+max_temp_2023 <- apply.daily(temp_set_2023, max)
+min_temp_2023 <- apply.daily(temp_set_2023, min)
+mean_temp_2023 <- apply.daily(temp_set_2023, mean)
+
+VPD_set_2023 <- subset(weather_2023, select = c("Datetime","VPD"))
+max_VPD_2023 <- apply.daily(VPD_set_2023, max)
+min_VPD_2023 <- apply.daily(VPD_set_2023, min)
 
 
-precip_set <- subset(weather, select = c("Datetime","precip"))
-daily_precip <- apply.daily(precip_set, sum)
-
-weather_daily_2023 <- cbind(max_temp,min_temp,max_VPD,min_VPD,daily_precip)
-colnames(weather_daily_2023) <- c("max_temp","min_temp","max_VPD","min_VPD","daily_precip")
-d <- weather_daily_2023
-Datetime <- rownames(d)
-rownames(d) <- NULL
-weather_daily_2023 <- cbind(Datetime,d)
-weather_daily_2023 <- weather_daily_2023 %>% mutate(Datetime = ymd_hms(Datetime))
+precip_set_2023 <- subset(weather_2023, select = c("Datetime","precip"))
+daily_precip_2023 <- apply.daily(precip_set_2023, sum)
 
 
-write.csv(weather_daily_2023, "LC_2023/2023_weather/weather_daily_2023.csv")
+weather_daily_2023 <- cbind(max_temp_2023,min_temp_2023,mean_temp_2023,max_VPD_2023,min_VPD_2023,daily_precip_2023)
+colnames(weather_daily_2023) <- c("max_temp","min_temp","mean_temp_2023","max_VPD","min_VPD","daily_precip")
+d2023 <- weather_daily_2023
+Datetime2023 <- rownames(d2023)
+rownames(d2023) <- NULL
+weather_daily_2023 <- cbind(Datetime2023,d2023)
+weather_daily_2023 <- weather_daily_2023 %>% mutate(Datetime = ymd_hms(Datetime2023))
+weather_daily_2023$Date <- as.Date(weather_daily_2023$Datetime)
+
+#imput PRISM precip data
+weather_daily_2023[1:10,7] <- PRISM_2023_precip[11:20,2]
+weather_daily_2023[11:44,7] <- PRISM_2023_precip[28:61,2]
+
+
+write.csv(weather_daily_2023, "LC_2023/2023_weather/weather_processed/weather_daily_2023.csv")
+
+
 
 #predawn daily water potentials
 #from scattered days
@@ -80,4 +140,22 @@ WP_8_28 <- WP_8_28 %>% summarize(
 WP_8_28$Datetime <- 	ymd_hms("2023-08-28 23:45:00")
 
 daily_predawn <- rbind(WP_8_1,WP_8_16,WP_8_17,WP_8_28)
+daily_predawn$Date <- as.Date(daily_predawn$Datetime)
 write.csv(daily_predawn, file = "LC_2023/2023_weather/weather_processed/daily_predawn_WP.csv")
+
+
+#Daily soil moisture
+SM_dat <- read.csv("LC_2023/2023_weather/weather_processed/LC_2023_SM.csv")
+SM_dat <- SM_dat[,c(2,3)]
+str(SM_dat)
+SM_dat$Datetime <- ymd_hms(SM_dat$Datetime)
+SM_daily <- apply.daily(SM_dat, mean)
+
+
+SM_2023 <- SM_daily
+SMd2023 <- rownames(SM_daily)
+rownames(SMd2023) <- NULL
+SM_daily_2023 <- cbind(SMd2023,SM_2023)
+SM_daily_2023$Date <- as.Date(SM_daily_2023$SMd2023)
+
+write.csv(SM_daily_2023, file = "LC_2023/2023_weather/weather_processed/daily_SM.csv")

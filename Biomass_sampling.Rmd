@@ -14,7 +14,7 @@ library(fabricatr)
 library(dplyr)
 library(ggplot2)
 
-growth_dat <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/LC_9_20_growth_data_cleaned.csv")
+growth_dat <- read.csv(file = "LC_2023/2023_growth_inventory_analysis/processed/LC_9_20_growth_data_cleaned.csv")
 #growth_dat$Vol_index <- 0.333*((3.14*((growth_dat$DBH/2)^2))*growth_dat$Height)
 
 growth_dat <- growth_dat %>% mutate(tier = case_when(
@@ -330,6 +330,7 @@ biomass_replacement_set <- biomass_summary[!(biomass_summary$ID %in% biomass_ran
 reps_16_20 <- subset(biomass_replacement_set, event_short =="16-20") %>%
   group_by(event_short) %>%
   sample_n(2)
+reps_16_20 <- inner_join(reps_16_20, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample, ID != "LCOR-107"& ID != "LCOR-505")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_16_20)
@@ -339,6 +340,7 @@ biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_16_20)
 reps_4A <- subset(biomass_replacement_set, event_short =="4A") %>%
   group_by(event_short) %>%
   sample_n(1)
+reps_4A <- inner_join(reps_4A, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-233")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_4A)
@@ -347,6 +349,7 @@ biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_4A)
 reps_5A <- subset(biomass_replacement_set, event_short =="5A") %>%
   group_by(event_short) %>%
   sample_n(3)
+reps_5A <- inner_join(reps_5A, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-251"& ID !="LCOR-161"& ID != "LCOR-167")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_5A)
@@ -356,6 +359,7 @@ biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_5A)
 reps_13_15E <- subset(biomass_replacement_set, event_short =="13-15E") %>%
   group_by(event_short) %>%
   sample_n(2)
+reps_13_15E <- inner_join(reps_13_15E, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-606"& ID !="LCOR-075")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_13_15E)
@@ -366,6 +370,7 @@ biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_13_15E)
 reps_CT3 <- subset(biomass_replacement_set, event_short =="CT3") %>%
   group_by(event_short) %>%
   sample_n(2)
+reps_CT3 <- inner_join(reps_CT3, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-503"& ID !="LCOR-197")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_CT3)
@@ -375,21 +380,32 @@ biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_CT3)
 reps_8_9D <- subset(biomass_replacement_set, event_short =="8-9D") %>%
   group_by(event_short) %>%
   sample_n(1)
+reps_8_9D <- inner_join(reps_8_9D, LC_meta)
 
 biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-094")
 biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_8_9D)
+#####
+#2H
+reps_2H <- subset(biomass_replacement_set, event_short =="2H") %>%
+  group_by(event_short) %>%
+  sample_n(1)
+reps_2H <- inner_join(reps_2H, LC_meta)
 
+biomass_random_sample_v2 <- subset(biomass_random_sample_v2, ID != "LCOR-218")
+biomass_random_sample_v2 <- rbind(biomass_random_sample_v2, reps_2H)
 
 #save new lists
 
+biomass_random_sample_v3 <- biomass_random_sample_v2
 
-sample_priority1_SRS_v2 <- subset(biomass_random_sample_v2, event_short == "5A" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D")
 
-write.csv(sample_priority1_SRS_v2,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_SRS_v2.csv")
+sample_priority1_SRS_v3 <- subset(biomass_random_sample_v3, event_short == "5A" | event_short == "4A" | event_short == "16-20" | event_short == "8-9D")
 
-sample_priority2_SRS_v2 <- subset(biomass_random_sample_v2, event_short == "13-15E" | event_short == "CT3" )
+write.csv(sample_priority1_SRS_v3,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority1_SRS_v3.csv")
 
-write.csv(sample_priority2_SRS_v2,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_SRS_v2.csv")
+sample_priority2_SRS_v3 <- subset(biomass_random_sample_v3, event_short == "13-15E" | event_short == "CT3"|event_short == "2H" )
+
+write.csv(sample_priority2_SRS_v3,file = "LC_2023/2023_growth_inventory_analysis/biomass_sample_priority2_SRS_v3.csv")
 
 
 ```

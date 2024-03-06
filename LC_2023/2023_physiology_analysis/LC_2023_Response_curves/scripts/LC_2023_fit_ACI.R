@@ -1,22 +1,25 @@
 #process fits for A-ci curves and output them in a csv
 
+#install.packages("plantecophys")
 library(plantecophys)
+#install.packages("nlstools")
 library(nlstools)
 library(devtools)
 library(tidyr)
 library(ggplot2)
 library(dplyr)
+#install.packages("openxlsx")
 library(openxlsx)
-library(plantecophys)
 library(mgcv)
-
+#install.packages("photosynthesis")
+library(photosynthesis)
 #read in compiled datasets
 
 ACI_compiled <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/CO2_response_curves_compiled.csv")
 
 #long format
 
-all_trees_wide <- pivot_wider(ACI_compiled,id_cols = c("ID"), names_from = Csetpoint, values_from = c(A,gsw,Ci))
+#all_trees_wide <- pivot_wider(ACI_compiled,id_cols = c("ID"), names_from = Csetpoint, values_from = c(A,gsw,Ci))
 
 #fx for viewing data
 viewdat = function(dat){plot(y = dat$A, x = dat$Ci);abline(h = seq(0,20,1));dat}
@@ -31,7 +34,7 @@ plotfits = function(fit){
   dev.off()
 }
 
-options("device")
+#options("device")
 #create lists to store data in
 
 tree_list = list()
@@ -51,6 +54,9 @@ viewdat(LCOR307_2)
 #LCOR307 <- LCOR307[c(-1,-2,-7),]
 LCOR307_fit_1 = fitaci(LCOR307_1,Tcorrect = "FALSE",varnames = list(ALEAF = 'A',Tleaf = 'Tleaf',Ci = 'Ci',PPFD = 'Qin'))
 LCOR307_fit_2 = fitaci(LCOR307_2,Tcorrect = "FALSE",varnames = list(ALEAF = 'A',Tleaf = 'Tleaf',Ci = 'Ci',PPFD = 'Qin'))
+
+#fit_aci_response(LCOR307_1,varnames = list(A_net = "A",T_leaf = "Tleaf",C_i = "Ci",PPFD = "Qin",g_mc))
+#?fit_aci_response
 plotfits(LCOR307_fit_1)
 plotfits(LCOR307_fit_2)
 summary(LCOR307_fit_1)
@@ -688,7 +694,7 @@ Rd_list <- append(Rd_list, coef065[3])
 Amax_list <- append(Amax_list, max(LCOR065_fit$df$Amodel))
 
 LCOR165 = subset(ACI_compiled, ID == "LCOR-165")
-LCOR165 <- LCOR165[c(-8),]
+LCOR165 <- LCOR165[c(-8,-2),]
 viewdat(LCOR165)
 LCOR165_fit = fitaci(LCOR165,Tcorrect = "FALSE",varnames = list(ALEAF = 'A',Tleaf = 'Tleaf',Ci = 'Ci',PPFD = 'Qin'))
 plotfits(LCOR165_fit)

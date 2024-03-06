@@ -300,10 +300,10 @@ write.csv(Aug_predawn_summary_class, file = "LC_2023/2023_physiology_analysis/di
 
 #Detailed photosynthetic parameters for subset of trees
 head(August_6800_summary_tree)
-head(August_predawn_summary_tree)
-August_predawn_summary_tree$Timepoint <- as.factor(August_predawn_summary_tree$Timepoint)
+head(Aug_predawn_summary_tree)
+Aug_predawn_summary_tree$Timepoint <- as.factor(Aug_predawn_summary_tree$Timepoint)
 
-August_fluor_set <- inner_join(August_6800_summary_tree, August_predawn_summary_tree, by = c("ID","treatment","n"))
+August_fluor_set <- inner_join(August_6800_summary_tree, Aug_predawn_summary_tree, by = c("ID","treatment","n"))
 August_fluor_set$Timepoint <- August_fluor_set$Timepoint.x
 #introduce ETR and PAR from li600
 August_600_subset <-subset(August_600_summary_tree, select = c(ID,Timepoint,treatment,ETR,PAR,Tleaf,PhiPS2,gsw))
@@ -314,12 +314,13 @@ August_fluor_set <- inner_join(August_fluor_set, August_600_subset, by = c("ID",
 August_dark_resp <- read.csv(file = "LC_2023/2023_physiology_analysis/diurnal_experiments/diurnal_filled/August_resp.csv")
 August_fluor_set <- left_join(August_fluor_set, August_dark_resp)
 
-August_fluor_set[53:56,32] <- -1.2785891
-August_fluor_set[53:56,35] <- 21.80105
-August_fluor_set$R <- (August_fluor_set$Rd*2.2)^((August_fluor_set$Tleaf - August_fluor_set$Resp_temp)/10)
+August_fluor_set[53:56,31]
+August_fluor_set[53:56,31] <- -1.2785891
+August_fluor_set[53:56,34] <- 21.80105
+August_fluor_set$R <- (-1*August_fluor_set$Rd*2.2)^((August_fluor_set$Tleaf - August_fluor_set$Resp_temp)/10)
 
-#(August_fluor_set$Rd*2.2)^August_fluor_set$resp_factor
-#August_fluor_set$resp_factor <- (August_fluor_set$Tleaf - August_fluor_set$Resp_temp)/10
+(August_fluor_set$Rd*2.2)^August_fluor_set$resp_factor
+August_fluor_set$resp_factor <- (August_fluor_set$Tleaf - August_fluor_set$Resp_temp)/10
 
 August_fluor_set$Theta_e <- (4*(August_fluor_set$PhiPS2 - 0.026947))/7.567127
 August_fluor_set$Jt <- August_fluor_set$Theta_e*August_fluor_set$PAR

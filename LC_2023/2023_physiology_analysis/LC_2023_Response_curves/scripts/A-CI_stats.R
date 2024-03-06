@@ -7,21 +7,21 @@ library(ggplot2)
 library(dplyr)
 #import cleaned ACI data
 
-ACI_summary_tree <- read.csv("LC_2023/2023_physiology_analysis/LC_2023_Response_curves/ACI_summary_tree_cleaned.csv")
+ACI_summary_tree <- read.csv("LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/ACI_summary_tree_cleaned.csv")
 ACI_summary_tree$PhiPS2 <- as.numeric(ACI_summary_tree$PhiPS2)
 ACI_summary_tree$ETR <- as.numeric(ACI_summary_tree$ETR)
 
 #import photosynthetic parameters
-ACI_parameters <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/aci_parameters_list.csv")
+ACI_parameters <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/aci_parameters_list.csv")
 
 #stats
 
 unique(aci_parameters_list$event)
 
 # Create tiers factor
-ACI_parameters <- ACI_parameters %>% mutate(tier = case_when(
-  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "top",
-  event_short == "13-15E" | event_short == "2H" ~ "poor",
+ACI_parameters <- ACI_parameters %>% mutate(Class = case_when(
+  event_short == "5A" | event_short == "5C" | event_short == "4A" ~ "intermediate",
+  event_short == "13-15E" | event_short == "2H" ~ "high",
   event_short == "16-20" | event_short == "8-9D" ~ "Control",
   event_short == "CT3" ~ "WT",
   event_short == "13-15B" | event_short == "1" | event_short == "1C" | event_short == "7"| event_short == "4B"| event_short == "5" ~ "unanalyzed"))
@@ -37,41 +37,58 @@ std_Vcmax <- sd(ACI_parameters$Vcmax)
 CV_vcmax <- (std_Vcmax/mean_vcmax)*100
 
 #fit model
-mod0 <- lm(Vcmax ~ tier + sample_date + block, data = ACI_parameters)
+mod0 <- lm(Vcmax ~ Class + sample_date + block, data = ACI_parameters)
 #fit aov
-aov0 <- aov(Vcmax ~ tier + sample_date + block, data = ACI_parameters)
+aov0 <- aov(Vcmax ~ Class + sample_date + block, data = ACI_parameters)
 summary(mod0)
 anova(aov0)
 
 # Make a sample_date as a random effect
-mod1 <- lme(Vcmax ~ tier, random = ~1|sample_date, data = ACI_parameters)
+mod1 <- lme(Vcmax ~ Class, random = ~1|sample_date, data = (subset(ACI_parameters,Class != "WT")))
+
 summary(mod1)
+
+ACI_parameters <- (subset(ACI_parameters,Class != "WT")) %>% mutate(
+  residuals = resid(mod1),
+  fitted = fitted(mod1)
+)
 
 # Residual and qq plots
 plot(fitted(mod1), residuals(mod1), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
 qqnorm(residuals(mod1)); qqline(residuals(mod1))
-#one strong outlier: residual = -52.9
+
+#one strong outlier: residual = -52.9, LCOR-165. No real reason to exclude it however
 fitted(mod1)
 residuals(mod1)
+
+ggplot(ACI_parameters, aes(x=fitted,y=residuals))+
+  geom_point()
+
+ggplot(ACI_parameters, aes(x=Class,y=residuals))+
+  geom_point()
+
+ggplot(ACI_parameters, aes(x=sample_date,y=residuals))+
+  geom_point()
+
 
 #pairwise comparison
 
 
-emmeans_Vcmax <- emmeans(mod1, specs = pairwise ~tier)
+emmeans_Vcmax <- emmeans(mod1, specs = pairwise ~Class)
 emmeans_Vcmax
 
 # graph modelled tier means
-tier_Vcmax_effect <- as.data.frame(emmeans_Vcmax$emmeans)
-tier_Vcmax_effect$modelled_Vcmax <- (tier_Vcmax_effect$emmean)
+Class_Vcmax_effect <- as.data.frame(emmeans_Vcmax$emmeans)
+Class_Vcmax_effect$mean_Vcmax <- (Class_Vcmax_effect$emmean)
 
-my_colors3 <- c("gray0","chartreuse4","indianred3","gray")
-modelled_vcmax_plot <- ggplot(tier_Vcmax_effect, aes(x=tier,y=emmean,color=tier))+
-  geom_point(size =2)+
-  ylab("Modelled Vcmax (µmol/m2/sec)")+
-  geom_errorbar(aes(ymin=emmean-2*SE,ymax=emmean+2*SE),linewidth=1)+
-  scale_color_manual(values = my_colors3)+
+my_colors3 <- c("gray0","chartreuse4","indianred3")
+modelled_vcmax_plot <- ggplot(Class_Vcmax_effect, aes(x=Class,y=emmean,fill=Class))+
+  geom_bar(stat="identity")+
+  ylab("Vcmax (µmol/m2/sec)")+
+  geom_errorbar(aes(ymin=emmean-2*SE,ymax=emmean+2*SE),linewidth=0.5,width=0.5,color="gray60")+
+  scale_fill_manual(values = my_colors3)+
   theme_bw()
 
 modelled_vcmax_plot
@@ -165,10 +182,16 @@ summary(mod00)
 anova(aov00)
 
 # Make a sample_date as a random effect
-mod2 <- lme(Jmax ~ tier, random = ~1|sample_date, data = ACI_parameters)
+mod2 <- lme(Jmax ~ Class, random = ~1|sample_date, data = subset(ACI_parameters,Class != "WT"))
 summary(mod2)
 
 # Residual and qq plots
+
+ACI_parameters <- (subset(ACI_parameters,Class != "WT")) %>% mutate(
+  J_residuals = resid(mod2),
+  J_fitted = fitted(mod2)
+)
+
 plot(fitted(mod2), residuals(mod2), xlab="Fitted Values",
      ylab="Studentized Residuals",
      main="Fitted vs. Residuals"); abline(h=0)
@@ -177,22 +200,31 @@ qqnorm(residuals(mod2)); qqline(residuals(mod2))
 fitted(mod2)
 residuals(mod2)
 
+ggplot(ACI_parameters, aes(x=J_fitted,y=J_residuals))+
+  geom_point()
+
+ggplot(ACI_parameters, aes(x=Class,y=J_residuals))+
+  geom_point()
+
+ggplot(ACI_parameters, aes(x=sample_date,y=J_residuals))+
+  geom_point()
+
 #pairwise comparison
 
 
-emmeans_Jmax <- emmeans(mod2, specs = pairwise ~tier)
+emmeans_Jmax <- emmeans(mod2, specs = pairwise ~Class)
 emmeans_Jmax
 
 # graph modelled tier means
-tier_Jmax_effect <- as.data.frame(emmeans_Jmax$emmeans)
-tier_Jmax_effect$modelled_Jmax <- (tier_Jmax_effect$emmean)
+Class_Jmax_effect <- as.data.frame(emmeans_Jmax$emmeans)
+Class_Jmax_effect$modelled_Jmax <- (Class_Jmax_effect$emmean)
 
 my_colors3 <- c("gray0","chartreuse4","indianred3","gray")
-modelled_Jmax_plot <- ggplot(tier_Jmax_effect, aes(x=tier,y=emmean,color=tier))+
-  geom_point(size =2)+
-  ylab("Modelled Jmax (µmol/m2/sec)")+
-  geom_errorbar(aes(ymin=emmean-2*SE,ymax=emmean+2*SE),linewidth=1)+
-  scale_color_manual(values = my_colors3)+
+modelled_Jmax_plot <- ggplot(Class_Jmax_effect, aes(x=Class,y=emmean,fill=Class))+
+  geom_bar(stat = "identity")+
+  ylab("Jmax (µmol/m2/sec)")+
+  geom_errorbar(aes(ymin=emmean-2*SE,ymax=emmean+2*SE),linewidth=0.5,width=0.5,color="gray60")+
+  scale_fill_manual(values = my_colors3)+
   theme_bw()
 
 modelled_Jmax_plot

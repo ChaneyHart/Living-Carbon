@@ -5,16 +5,16 @@ library(lubridate)
 
 #import cleaned ACI data
 
-ACI_summary_tree <- read.csv("LC_2023/2023_physiology_analysis/LC_2023_Response_curves/ACI_summary_tree_cleaned.csv")
+ACI_summary_tree <- read.csv("LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/ACI_summary_tree_cleaned.csv")
 ACI_summary_tree$PhiPS2 <- as.numeric(ACI_summary_tree$PhiPS2)
 ACI_summary_tree$ETR <- as.numeric(ACI_summary_tree$ETR)
 
 #import photosynthetic parameters
-ACI_parameters <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/aci_parameters_list.csv")
+ACI_parameters <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/aci_parameters_list.csv")
 
 #import event summary
 
-ACI_event_summary <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/ACI_event_summary.csv")
+ACI_event_summary <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/ACI_event_summary.csv")
 
 #light_response_curves
 
@@ -32,20 +32,21 @@ SM_dat <- read.csv("LC_2023/2023_weather/weather_processed/LC_2023_SM.csv")
 SM_dat$Datetime <- ymd_hms(SM_dat$Datetime)
 
 #tier summary
-ACI_tier_summary <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/ACI_tier_summary.csv")
-ACI_tier_summary_date <- read.csv(file ="LC_2023/2023_physiology_analysis/LC_2023_Response_curves/ACI_tier_summary_date.csv")
+ACI_tier_summary <- read.csv(file = "LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/ACI_tier_summary.csv")
+ACI_tier_summary_date <- read.csv(file ="LC_2023/2023_physiology_analysis/LC_2023_Response_curves/compiled/ACI_tier_summary_date.csv")
 
 ####graph_sample dates with temp and VPD
+geom_vlin
 
 Sample_date_plot <- ggplot()+
   geom_line(data = subset(weather_daily, Datetime > as.POSIXct("2023-06-01 00:00") & Datetime < as.POSIXct("2023-9-01 00:00")),aes(x= Datetime, y=max_temp),color="red3")+
   geom_line(data = subset(weather_daily, Datetime > as.POSIXct("2023-06-01 00:00") & Datetime < as.POSIXct("2023-9-01 00:00")),aes(x= Datetime, y=max_VPD*10),color="blue3")+
-  geom_point(aes(x=as.POSIXct("2023-06-14 12:00"),y=0))+
-  geom_point(aes(x=as.POSIXct("2023-06-22 12:00"),y=0))+
-  geom_point(aes(x=as.POSIXct("2023-07-18 12:00"),y=0))+
-  geom_point(aes(x=as.POSIXct("2023-07-22 12:00"),y=0))+
-  geom_point(aes(x=as.POSIXct("2023-07-29 12:00"),y=0))+
-  geom_point(aes(x=as.POSIXct("2023-08-29 12:00"),y=0))+
+  geom_vline(xintercept=as.POSIXct("2023-06-14 12:00"))+
+  geom_point(xintercept=as.POSIXct("2023-06-22 12:00"))+
+  geom_point(xintercept=as.POSIXct("2023-07-18 12:00"))+
+  geom_point(xintercept=as.POSIXct("2023-07-22 12:00"))+
+  geom_point(xintercept=as.POSIXct("2023-07-29 12:00"))+
+  geom_point(xintercept=as.POSIXct("2023-08-29 12:00"))+
   scale_y_continuous(
     # Features of the first axis
     name = "max air temp (˚C)",
